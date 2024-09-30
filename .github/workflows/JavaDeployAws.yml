@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  CLUSTER_NAME: quick-serve-api
+  CLUSTER_NAME: EKS-QUICK-SERVE
   AWS_REGION: us-east-1
 
 jobs:
