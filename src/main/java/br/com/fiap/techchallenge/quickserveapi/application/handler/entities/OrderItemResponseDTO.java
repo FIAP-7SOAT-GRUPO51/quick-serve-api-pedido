@@ -1,24 +1,16 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.entities;
 
-
-
-public class ProductEntity {
-
+public class OrderItemResponseDTO {
     private Long id;
-
     private String name;
-
-    private CategoryEnum category;
-
-    private double price;
-
+    private String category;
+    private Double price;
     private String description;
-
     private String imagePath;
 
-    //private Set<OrderProductsEntity> itemOrders;
-
-    public ProductEntity(Long id, String name, CategoryEnum category, Double price, String description, String imagePath) {
+    // Construtores, getters e setters
+    public OrderItemResponseDTO(Long id, String name, String category, Double price,
+                                String description, String imagePath) {
         this.id = id;
         this.name = name;
         this.category = category;
@@ -26,9 +18,7 @@ public class ProductEntity {
         this.description = description;
         this.imagePath = imagePath;
     }
-
     // Getters e setters
-
     public Long getId() {
         return id;
     }
@@ -45,19 +35,19 @@ public class ProductEntity {
         this.name = name;
     }
 
-    public CategoryEnum getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(CategoryEnum category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
-    public double getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
@@ -77,4 +67,14 @@ public class ProductEntity {
         this.imagePath = imagePath;
     }
 
+    @Override
+    public String toString() {
+        return "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", price=" + price +
+                ", description='" + description + '\'' +
+                ", imagePath='" + imagePath + '\'' +
+                '}';
+    }
 }

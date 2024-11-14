@@ -1,6 +1,6 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.CategoryNotFoundException;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -28,8 +28,8 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<Object> handleCategoryNotFound(CategoryNotFoundException ex) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Object> handleCategoryNotFound(NotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }

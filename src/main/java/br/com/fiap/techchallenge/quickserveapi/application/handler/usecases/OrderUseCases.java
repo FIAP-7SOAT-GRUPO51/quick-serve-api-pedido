@@ -13,13 +13,11 @@ public class OrderUseCases implements OrderRepository {
         this.orderRepository = orderRepository;
     }
 
-    public OrderEntity findById(Long id) {
-        return this.orderRepository.findById(id);
-    }
-
     public OrderEntity save(OrderEntity order) {
         return this.orderRepository.save(order);
     }
+ /*
+
 
     public OrderEntity updateStatus(OrderEntity order) {
         return this.orderRepository.updateStatus(order);
@@ -28,4 +26,6 @@ public class OrderUseCases implements OrderRepository {
     public List<OrderEntity> findAll() {
         return this.orderRepository.findAll();
     }
+
+     */
 }

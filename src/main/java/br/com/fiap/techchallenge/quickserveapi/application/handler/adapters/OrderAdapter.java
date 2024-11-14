@@ -1,41 +1,133 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.adapters;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderEntity;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPaymentStatusEnum;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderStatusEnum;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+@Component // Marca a classe como um componente do Spring, permitindo injeção de dependências
 public class OrderAdapter {
+
+    @Autowired
+    private ProductClient productClient; // Injeção de dependência do ProductClient
+
+    // Método original, sem alterações
+/*    public static OrderEntity mapSingleToOrderEntity(Map<String, Object> row) {
+        if (row == null) {
+            throw new RuntimeException("Ordem não encontrada");
+        }
+
+        // Imprimir os dados da linha para inspeção
+        System.out.println("Dados da linha recebida: " + row);
+        System.out.println("customer_id: " + row.get("order_id"));
+
+        // Conversão dos valores de 'status' e 'payment_status' para os enums respectivos
+        OrderStatusEnum status = OrderStatusEnum.valueOf((String) row.get("status"));
+        OrderPaymentStatusEnum paymentStatus = OrderPaymentStatusEnum.valueOf((String) row.get("payment_status"));
+
+        // Conversão de 'order_id' diretamente para Long
+        Long orderId = (Long) row.get("order_id");
+
+        Long customerId = (Long) row.get("customer_id");
+
+        // Aqui, 'orderItems' será uma lista de OrderItem, por enquanto, colocamos null
+        List<OrderItem> orderItems = null;
+
+        // Criar a OrderEntity com os valores mapeados
+        OrderEntity orderEntity = new OrderEntity(
+                orderId,
+                customerId,
+                status,
+                paymentStatus,
+                orderItems,  // Lista de itens do pedido (atualmente null)
+                (Double) row.get("total_order_value")
+        );
+
+        // Imprimir a entidade mapeada para verificação
+        System.out.println("Entidade mapeada: " + orderEntity);
+
+        return orderEntity;
+    }
+*/
 
     public static OrderEntity mapSingleToOrderEntity(Map<String, Object> row) {
         if (row == null) {
             throw new RuntimeException("Ordem não encontrada");
         }
+
+        // Imprimir os dados da linha para inspeção
+        System.out.println("Dados da linha recebida: " + row);
+        System.out.println("order_id: " + row.get("order_id"));
+
+        // Conversão dos valores de 'status' e 'payment_status' para os enums respectivos
         OrderStatusEnum status = OrderStatusEnum.valueOf((String) row.get("status"));
         OrderPaymentStatusEnum paymentStatus = OrderPaymentStatusEnum.valueOf((String) row.get("payment_status"));
 
-        return new  OrderEntity(
-                (Long) row.get("order_id"),
-                (String) row.get("customer_id"),
+        // Conversão de 'order_id' e 'customer_id' de forma robusta
+        Long orderId = parseLong(row.get("order_id"));
+        Long customerId = parseLong(row.get("customer_id"));
+
+        // Aqui, 'orderItems' será uma lista de OrderItem, por enquanto, colocamos null
+        List<OrderItem> orderItems = null;
+
+        // Criar a OrderEntity com os valores mapeados
+        OrderEntity orderEntity = new OrderEntity(
+                orderId,
+                customerId,
                 status,
                 paymentStatus,
-                null,
+                orderItems,  // Lista de itens do pedido (atualmente null)
                 (Double) row.get("total_order_value")
         );
-    }
-    // Long id, Long customerID,OrderStatusEnum status, List<ProductEntity> orderItems, Double totalOrderValue
 
+        // Imprimir a entidade mapeada para verificação
+        System.out.println("Entidade mapeada: " + orderEntity);
+
+        return orderEntity;
+    }
+
+    // Método de parse para garantir que a conversão de tipo seja feita de forma segura
+    private static Long parseLong(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).longValue();  // Converte valores numéricos diretamente para Long
+        }
+        try {
+            return Long.parseLong(value.toString());  // Tenta converter de String para Long
+        } catch (NumberFormatException e) {
+            return null;  // Retorna null se não puder converter
+        }
+    }
+
+
+    // Método de conversão de ProductDTO para OrderItem
+    private List<OrderItem> convertToOrderItems(List<ProductDTO> productDTOList) {
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (ProductDTO productDTO : productDTOList) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(productDTO.getId());
+            orderItem.setQuantity(productDTO.getQuantity());
+
+            orderItems.add(orderItem);
+        }
+
+        return orderItems;
+    }
+
+    // Métodos de mapeamento para listas
     public static OrderEntity mapToOrderEntityEntity(List<Map<String, Object>> results) {
         if (results == null || results.isEmpty()) {
             throw new RuntimeException("Ordem não encontrada");
         }
         Map<String, Object> row = results.get(0);
-        return mapSingleToOrderEntity(row);
+        return new OrderAdapter().mapSingleToOrderEntity(row); // Usando instância para chamar o método
     }
 
     public static List<OrderEntity> mapToOrderEntityList(List<Map<String, Object>> results) {
@@ -44,28 +136,65 @@ public class OrderAdapter {
         }
         List<OrderEntity> orders = new ArrayList<>();
         for (Map<String, Object> row : results) {
-            orders.add(mapSingleToOrderEntity(row));
+            orders.add(mapSingleToOrderEntity(row)); // Não precisa de instância, o método pode ser estático
         }
         return orders;
     }
 
-    public static String mapToMessage(Map<String, Object> row) {
-        if (row == null) {
-            throw new RuntimeException("Ordem não encontrada");
-        }
-        return (String) row.get("Mensagem");
+
+    public static OrderEntity mapToOrderEntity(Map<String, Object> data) {
+        OrderEntity order = new OrderEntity();
+
+        // Aqui você já pode tratar como String diretamente
+
+        order.setId((Long) data.get("order_id"));
+
+        // Conversão de customer_id de String para Long
+        String customerIdString = (String) data.get("customer_id");
+        Long customerId = Long.valueOf(customerIdString);  // Converte String para Long
+        order.setCustomerID(customerId);
+
+        // Convert status from String to OrderStatusEnum
+        String statusString = (String) data.get("status");
+        OrderStatusEnum status = OrderStatusEnum.valueOf(statusString);  // Correct conversion
+        order.setStatus(status);
+
+        order.setTotalOrderValue((Double) data.get("total_order_value"));
+        order.setPaymentStatus(OrderPaymentStatusEnum.valueOf((String) data.get("payment_status")));
+
+        return order;
     }
 
-    public static String mapToJson(String results) {
-        if (results == null || results.isEmpty()) {
-            throw new RuntimeException("Ordem não encontrada");
+    public static OrderItem mapToOrderItem(Map<String, Object> data) {
+        OrderItem item = new OrderItem();
+
+        // Verifique se o valor para 'product_id' é null ou se não pode ser convertido para Long
+        if (data.get("product_id") != null) {
+            item.setProductId((Long) data.get("product_id"));
         }
-        JSONArray jsonArray = null;
-        try {
-            jsonArray = new JSONArray(results);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
+
+        // Verifique se o valor para 'quantity' é null ou se não pode ser convertido para Integer
+        if (data.get("quantity") != null) {
+            item.setQuantity((Integer) data.get("quantity"));
+        } else {
+            // Tratar o caso quando quantity for null, por exemplo, definindo um valor padrão
+            item.setQuantity(0);  // Valor padrão para quantidade
         }
-        return jsonArray.toString();
+
+        // Verifique se o valor para 'price_at_purchase' é null ou se não pode ser convertido para Double
+        if (data.get("price_at_purchase") != null) {
+            item.setPriceAtPurchase((Double) data.get("price_at_purchase"));
+        }
+
+        // Verifique se o valor para 'name' é null
+        if (data.get("name") != null) {
+            item.setName((String) data.get("name"));
+        }
+
+        return item;
     }
+
+
+
+
 }

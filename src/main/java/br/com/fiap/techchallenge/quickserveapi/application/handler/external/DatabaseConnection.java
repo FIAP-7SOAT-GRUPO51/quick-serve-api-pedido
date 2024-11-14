@@ -3,10 +3,7 @@ import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.Pa
 import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.dbconnection;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DatabaseConnection implements dbconnection {
     private final String url;
@@ -57,8 +54,6 @@ public class DatabaseConnection implements dbconnection {
 
         return primaryKeyColumn;
     }
-
-
 
     public List<Map<String, Object>> Inserir(String tabela, String[] campos, ParametroBd[] parametros) {
         StringBuilder query = new StringBuilder("INSERT INTO ");
@@ -153,8 +148,6 @@ public class DatabaseConnection implements dbconnection {
         return executarQuery(query.toString(), parametros,campos);
     }
 
-
-
     public List<Map<String, Object>> buscarPorParametros(String tabela, String[] campos, ParametroBd[] parametros) {
         List<Map<String, Object>> resultados = new ArrayList<>();
         StringBuilder query = new StringBuilder("SELECT ");
@@ -184,10 +177,21 @@ public class DatabaseConnection implements dbconnection {
 
         // Exibe a query construída
         System.out.println("Query construída: " + query.toString());
+        // Log dos parâmetros
+        if (parametros != null && parametros.length > 0) {
+            System.out.println("PARÂMETROS:");
+            for (ParametroBd parametro : parametros) {
+                System.out.println("Campo: " + parametro.getCampo() + ", Valor: " + parametro.getValor());
+            }
+        } else {
+            System.out.println("Nenhum parâmetro fornecido.");
+        }
+
+        // Log dos campos
+        //System.out.println("CAMPOS: " + Arrays.toString(campos));
 
         return executarQuery(query.toString(), parametros, campos);
     }
-
 
     public List<Map<String, Object>> executarQuery(String query, ParametroBd[] parametros, String[] campos) {
         List<Map<String, Object>> resultados = new ArrayList<>();
@@ -213,10 +217,14 @@ public class DatabaseConnection implements dbconnection {
 
             if (query.trim().toUpperCase().startsWith("SELECT")) {
                 ResultSet resultSet = preparedStatement.executeQuery();
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                int columnCount = metaData.getColumnCount(); // Obter o número de colunas na resposta
+
                 while (resultSet.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    for (String campo : campos) {
-                        row.put(campo, resultSet.getObject(campo));
+                    for (int i = 1; i <= columnCount; i++) { // Loop pelas colunas com índice baseado em 1
+                        String columnName = metaData.getColumnName(i); // Obter o nome da coluna
+                        row.put(columnName, resultSet.getObject(i)); // Inserir o valor no map
                     }
                     resultados.add(row);
                 }
@@ -250,8 +258,6 @@ public class DatabaseConnection implements dbconnection {
         }
         return resultados;
     }
-
-
 
     public List<Map<String, Object>> buscarPorFiltros(String tabela, String[] campos, ParametroBd[] parametros, String[] filtros, Map<String, Integer> caseFiltros, String defaultOrder) {
         List<Map<String, Object>> resultados = new ArrayList<>();
@@ -309,9 +315,5 @@ public class DatabaseConnection implements dbconnection {
         // Executa a query com todos os parâmetros e campos
         return executarQuery(query.toString(), parametros, campos);
     }
-
-
-
-
 
 }

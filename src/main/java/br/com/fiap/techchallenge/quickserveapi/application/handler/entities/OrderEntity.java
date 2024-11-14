@@ -1,20 +1,21 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.entities;
 
 import java.util.List;
+import java.util.UUID;
 
 public class OrderEntity {
-
     private Long id;
-    private String customerID;
+    private Long customerID;
     private OrderStatusEnum status;
     private OrderPaymentStatusEnum paymentStatus;
-    private List<ProductEntity> orderItems;
+    private List<OrderItem> orderItems;
     private Double totalOrderValue;
 
+    // Construtor sem argumentos
     public OrderEntity() {
     }
 
-    public OrderEntity(Long id, String customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<ProductEntity> orderItems, Double totalOrderValue) {
+    public OrderEntity(Long id, Long customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<OrderItem> orderItems, Double totalOrderValue) {
         this.id = id;
         this.customerID = customerID;
         this.status = status;
@@ -23,7 +24,8 @@ public class OrderEntity {
         this.totalOrderValue = totalOrderValue;
     }
 
-    public OrderEntity(Long id, String customerID, OrderPaymentStatusEnum paymentStatus, List<ProductEntity> orderItems, Double totalOrderValue) {
+    // Outros construtores...
+    public OrderEntity(Long id, Long customerID, OrderPaymentStatusEnum paymentStatus, List<OrderItem> orderItems, Double totalOrderValue) {
         this.id = id;
         this.customerID = customerID;
         this.paymentStatus = paymentStatus;
@@ -31,22 +33,12 @@ public class OrderEntity {
         this.totalOrderValue = totalOrderValue;
     }
 
-    public OrderEntity(String customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<ProductEntity> orderItems) {
+    public OrderEntity(Long customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<OrderItem> orderItems) {
         this.customerID = customerID;
         this.status = status;
         this.paymentStatus = paymentStatus;
         this.orderItems = orderItems;
-        this.totalOrderValue = orderItems.stream().mapToDouble(ProductEntity::getPrice).sum();
-    }
-
-    public OrderEntity(String customerID, OrderStatusEnum status) {
-        this.customerID = customerID;
-        this.status = status;
-    }
-
-    public OrderEntity(Long id, OrderPaymentStatusEnum paymentStatus) {
-        this.id = id;
-        this.paymentStatus = paymentStatus;
+        this.totalOrderValue = calculateTotalOrderValue();
     }
 
     public Long getId() {
@@ -57,11 +49,11 @@ public class OrderEntity {
         this.id = id;
     }
 
-    public String getCustomerID() {
+    public Long getCustomerID() {
         return this.customerID;
     }
 
-    public void setCustomerID(String customerID) {
+    public void setCustomerID(Long  customerID) {
         this.customerID = customerID;
     }
 
@@ -81,17 +73,17 @@ public class OrderEntity {
         this.paymentStatus = paymentStatus;
     }
 
-    public List<ProductEntity> getOrderItems() {
+    public List<OrderItem> getOrderItems() {
         return this.orderItems;
     }
 
-    public void setOrderItems(List<ProductEntity> orderItems) {
+    public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
     }
 
     public Double getTotalOrderValue() {
         if (this.totalOrderValue == null) {
-            return orderItems.stream().mapToDouble(ProductEntity::getPrice).sum();
+            return calculateTotalOrderValue();
         }
         return this.totalOrderValue;
     }
@@ -99,4 +91,11 @@ public class OrderEntity {
     public void setTotalOrderValue(Double totalOrderValue) {
         this.totalOrderValue = totalOrderValue;
     }
+
+    private Double calculateTotalOrderValue() {
+        return orderItems.stream()
+                .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
+                .sum();
+    }
 }
+

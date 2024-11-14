@@ -1,110 +1,65 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.controllers;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.adapters.OrderAdapter;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderEntity;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.ProductEntity;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.external.DatabaseConnection;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.ParametroBd;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderItem;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPaymentStatusEnum;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.ProductDTO;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.gateway.Gateway;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.http.PaymentClient;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.OrderRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class OrderRepositoryImpl implements OrderRepository {
 
-    private final DatabaseConnection database;
+    private final Gateway gateway;
+    private final ProductClient productClient;
+    private final PaymentClient paymentClient;
 
-    public OrderRepositoryImpl(DatabaseConnection database){
-        this.database = database;
+    @Autowired
+    public OrderRepositoryImpl(Gateway gateway, ProductClient productClient, PaymentClient paymentClient) {
+        this.gateway = gateway;
+        this.productClient = productClient;
+        this.paymentClient = paymentClient;
     }
 
     @Override
-    public OrderEntity save(OrderEntity orderEntity){
-        ParametroBd[] parametros = new ParametroBd[]{
-                new ParametroBd("status", orderEntity.getStatus().toString()),
-                new ParametroBd("customer_id", orderEntity.getCustomerID()),
-                new ParametroBd("total_order_value", orderEntity.getTotalOrderValue())
-        };
+    public OrderEntity save(OrderEntity orderEntity) {
+        // Salva o pedido via Gateway (microserviço de pedidos)
+        Long orderId = gateway.saveOrder(orderEntity);
+        orderEntity.setId(orderId);
 
-        // Chamada ao método Inserir do database com os parâmetros necessários
-        String[] campos = {"status", "customer_id", "total_order_value"};
-        String tabela = "orders";
-        List<Map<String, Object>> result  = database.Inserir(tabela, campos, parametros);
-        // Configurar o ID no OrderEntity
-        if (result != null && !result.isEmpty()) {
-            Map<String, Object> row = result.get(0);
-            if (row.containsKey("id")) {
-                orderEntity.setId(Long.parseLong(row.get("id").toString()));
-            }
-        }
-
-        // insert da tabela orderproduct
-        HashSet<Long> distinctProductId = new HashSet<Long>();
-        orderEntity.getOrderItems().forEach(product -> {
-            distinctProductId.add(product.getId());
+        // Salva os itens do pedido (microserviço de produtos)
+        orderEntity.getOrderItems().forEach(item -> {
+            // Chama o microserviço de produtos para salvar no banco
+            gateway.saveOrderProduct(orderId, item.getProductId(), item.getQuantity());
         });
 
-
-
-        distinctProductId.forEach(product -> {
-            ParametroBd[] parametrosOrderProduct = new ParametroBd[]{
-
-                    new ParametroBd("order_id", orderEntity.getId()),
-                    new ParametroBd("product_id", product),
-                    new ParametroBd("product_quantity", orderEntity.getOrderItems().stream().filter(p -> p.getId().equals(product)).count())
-            };
-            // Chamada ao método Inserir do database com os parâmetros necessários
-            String[] camposOrderProduct = {"order_id", "product_id", "product_quantity"};
-            String tabelaOrderProduct = "order_products";
-            database.Inserir(tabelaOrderProduct, camposOrderProduct, parametrosOrderProduct);
-
-        });
+        // Processa o pagamento via Feign Client
+        paymentClient.processPayment(orderEntity.getId(), orderEntity.getTotalOrderValue());
 
         return orderEntity;
     }
-
-
-    @Override
-    public OrderEntity findById(Long id){
-        ParametroBd[] parametros = { new ParametroBd("order_id", id) };
-        List<Map<String, Object>> resultados = database.buscarPorParametros("orders", new String[]{"order_id", "status", "customer_id", "total_order_value"}, parametros);
-        OrderEntity order  = OrderAdapter.mapToOrderEntityEntity(resultados);
-        ProductRepositoryImpl productRepository = new ProductRepositoryImpl(this.database);
-        order.setOrderItems(productRepository.findByOrder(order));
-        return order;
-    }
-
-    @Override
-    public OrderEntity updateStatus(OrderEntity order){
-        ParametroBd[] parametros = {
-                new ParametroBd("status", order.getStatus().toString()),
-                new ParametroBd("order_id", order.getId()),
-        };
-
-        String[] campos = {"status"};
-
-        String tabela = "orders";
-        List<Map<String, Object>> mensagem = database.Update(tabela, campos, parametros);
-
-        System.out.println(mensagem);
-        return order;
-    }
-
-    @Override
-    public List<OrderEntity> findAll() {
-        ParametroBd[] parametros = {};
-        List<Map<String, Object>> resultados = database.buscarPorParametros("orders", new String[]{"order_id", "status", "customer_id", "total_order_value"}, parametros);
-
-        ProductRepositoryImpl productRepository = new ProductRepositoryImpl(this.database);
-
-        List<OrderEntity> orders = OrderAdapter.mapToOrderEntityList(resultados);
-        orders.forEach(item -> {
-            item.setOrderItems(productRepository.findByOrder(item));
-        });
-
-        // Utiliza o adapter para mapear os resultados para ProductEntity
-        return orders;
-    }
 }
+
+/*
+    @Override
+    public OrderEntity updateStatus(OrderEntity order) {
+        // Atualiza o status do pedido via Gateway
+        gateway.updateOrderStatus(order.getId(), order.getStatus());
+        return order;
+    }
+
+
+
+
+
+    private long countProductQuantity(OrderEntity orderEntity, Long productId) {
+        return orderEntity.getOrderItems().stream().filter(p -> p.getId().equals(productId)).count();
+    }
+
+     */
