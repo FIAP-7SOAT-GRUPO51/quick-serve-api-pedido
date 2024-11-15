@@ -24,15 +24,31 @@ public class OrderCase {
         this.productClient = productClient;
     }
 
-    public OrderEntity save(OrderEntity orderEntity) {
+    public OrderResponseDTO save(OrderPostEntity orderEntity) {
+        // Pega a lista de OrderDTOs, não um único OrderDTO
+        List<OrderDTO> orderDTOs = orderEntity.getOrderDTOs();
+
+        OrderDTO produto = orderDTOs.get(0); // Aqui você pega o primeiro item da lista.
+
+        // Obtém o produto correspondente através do cliente
+        ProductDTO product = productClient.getProductById(produto.getId());
+
+        // Calcula o valor do pedido com base no preço do produto e quantidade do pedido
+        Double valorPedido = product.getPrice() * produto.getQuantity();
+
+        // Define o valor total do pedido no orderEntity
+        orderEntity.setTotalOrderValue(valorPedido);
+
+        // Salva o pedido e obtém o ID do pedido gerado
         Long orderId = gateway.saveOrder(orderEntity);
         orderEntity.setId(orderId);
 
-        orderEntity.getOrderItems().forEach(item -> {
-            gateway.saveOrderProduct(orderId, item.getProductId(), item.getQuantity());
+        // Salva cada item do pedido na base de dados
+        orderDTOs.forEach(item -> {
+            gateway.saveOrderProduct(orderId, item.getId(), item.getQuantity());
         });
 
-        return orderEntity;
+        return findById(orderId);
     }
 
     public OrderResponseDTO findById(Long id) {
@@ -65,10 +81,6 @@ public class OrderCase {
                     })
                     .collect(Collectors.toList());
 
-            // Calcular o valor total do pedido
-            Double totalOrderValue = orderEntity.getOrderItems().stream()
-                    .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                    .sum();
 
             // Certifique-se de que os valores estão corretos
             System.out.println("orderItemResponseDTOs: " + orderItemResponseDTOs);
@@ -80,7 +92,7 @@ public class OrderCase {
                     orderEntity.getStatus(),
                     orderEntity.getPaymentStatus(),
                     orderItemResponseDTOs,
-                    totalOrderValue
+                    orderEntity.getTotalOrderValue()
             );
         }
         throw new NotFoundException("Pedido não encontrado");
@@ -129,11 +141,6 @@ public class OrderCase {
                     })
                     .collect(Collectors.toList());
 
-            // Calculando o valor total do pedido
-            Double totalOrderValue = orderEntity.getOrderItems().stream()
-                    .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                    .sum();
-
             // Adiciona o DTO do pedido à lista de respostas
             orderResponseDTOs.add(new OrderResponseDTO(
                     orderEntity.getId(),
@@ -141,7 +148,7 @@ public class OrderCase {
                     orderEntity.getStatus(),
                     orderEntity.getPaymentStatus(),
                     orderItemResponseDTOs,
-                    totalOrderValue
+                    orderEntity.getTotalOrderValue()
             ));
         }
 
@@ -187,12 +194,6 @@ public class OrderCase {
                                 }
                             })
                             .collect(Collectors.toList());
-
-                    // Calcula o valor total do pedido
-                    Double totalOrderValue = orderEntity.getOrderItems().stream()
-                            .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                            .sum();
-
                     // Retorna o DTO do pedido enriquecido
                     return new OrderResponseDTO(
                             orderEntity.getId(),
@@ -200,7 +201,7 @@ public class OrderCase {
                             orderEntity.getStatus(),
                             orderEntity.getPaymentStatus(),
                             orderItemResponseDTOs,
-                            totalOrderValue
+                            orderEntity.getTotalOrderValue()
                     );
                 })
                 .collect(Collectors.toList());
@@ -237,10 +238,6 @@ public class OrderCase {
                     })
                     .collect(Collectors.toList());
 
-            // Cálculo do valor total do pedido
-            Double totalOrderValue = orderEntity.getOrderItems().stream()
-                    .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                    .sum();
 
             return new OrderResponseDTO(
                     orderEntity.getId(),
@@ -248,7 +245,7 @@ public class OrderCase {
                     orderEntity.getStatus(),
                     orderEntity.getPaymentStatus(),
                     orderItemResponseDTOs,
-                    totalOrderValue
+                    orderEntity.getTotalOrderValue()
             );
         }
         return null;  // Caso o pedido não seja encontrado
@@ -285,18 +282,13 @@ public class OrderCase {
                     })
                     .collect(Collectors.toList());
 
-            // Cálculo do valor total do pedido
-            Double totalOrderValue = orderEntity.getOrderItems().stream()
-                    .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                    .sum();
-
             return new OrderResponseDTO(
                     orderEntity.getId(),
                     String.valueOf(orderEntity.getCustomerID()),
                     orderEntity.getStatus(),
                     orderEntity.getPaymentStatus(),
                     orderItemResponseDTOs,
-                    totalOrderValue
+                    orderEntity.getTotalOrderValue()
             );
         }
         return null;  // Caso o pedido não seja encontrado

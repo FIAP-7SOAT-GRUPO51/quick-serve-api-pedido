@@ -1,6 +1,7 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.controllers;
 
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderEntity;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPostEntity;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderResponseDTO;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.PaymentStatusDTO;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.usecases.OrderCase;
@@ -15,7 +16,7 @@ public class OrderController {
         this.orderCase = orderCase;
     }
 
-    public OrderEntity save( OrderEntity orderInput){
+    public OrderResponseDTO save(OrderPostEntity orderInput){
        return orderCase.save(orderInput);
     }
 
@@ -44,26 +45,5 @@ public class OrderController {
     }
 
 
-/*
 
-
-
-    public OrderEntity updateStatus( OrderEntity orderInput){
-        return orderCase.updateStatus(orderInput);
-    }
-
-
-
-    public String checkPaymentStatus(Long id){
-        return orderCase.checkPaymentStatus(id);
-    }
-    public List<OrderEntity> listByFilters(){
-        return orderCase.listByFilters();
-    }
-
-    public OrderEntity paymentApprover(Long id, OrderPaymentStatusEnum status){
-        return orderCase.paymentApprover(id,status);
-    }
-
-     */
 }

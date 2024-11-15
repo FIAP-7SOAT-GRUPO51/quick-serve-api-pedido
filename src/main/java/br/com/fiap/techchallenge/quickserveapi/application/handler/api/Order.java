@@ -27,7 +27,7 @@ public class Order {
             summary = "Inserir novo pedido",
             description = "Este endpoint insere um novo pedido"
     )
-    public OrderEntity placeOrder(@RequestBody OrderEntity orderInput) {
+    public OrderResponseDTO placeOrder(@RequestBody OrderPostEntity orderInput) {
         return this.orderController.save(orderInput);
     }
 

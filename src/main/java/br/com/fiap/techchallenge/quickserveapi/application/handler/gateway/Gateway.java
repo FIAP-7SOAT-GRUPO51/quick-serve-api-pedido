@@ -16,7 +16,7 @@ public class Gateway {
         this.database = database;
     }
 
-    public Long saveOrder(OrderEntity orderEntity) {
+    public Long saveOrder(OrderPostEntity orderEntity) {
         String[] campos = {"status", "customer_id", "payment_status", "total_order_value"};
         ParametroBd[] parametros = new ParametroBd[]{
                 new ParametroBd("status", orderEntity.getStatus().toString()),
