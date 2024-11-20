@@ -3,9 +3,7 @@ package br.com.fiap.techchallenge.quickserveapi.application.handler.usecases;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.NotFoundException;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.gateway.Gateway;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.http.PaymentClient;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
-import org.springframework.http.HttpStatus;
 
 import java.util.*;
 
@@ -15,12 +13,10 @@ import java.util.stream.Collectors;
 public class OrderCase {
 
     private final Gateway gateway;
-    private final PaymentClient paymentClient;
     private final ProductClient productClient;
 
-    public OrderCase(Gateway gateway, PaymentClient paymentClient, ProductClient productClient) {
+    public OrderCase(Gateway gateway,ProductClient productClient) {
         this.gateway = gateway;
-        this.paymentClient = paymentClient;
         this.productClient = productClient;
     }
 
@@ -54,7 +50,10 @@ public class OrderCase {
     public OrderResponseDTO findById(Long id) {
         // Recupera o pedido do gateway
         OrderEntity orderEntity = gateway.findOrderById(id);
-        if (orderEntity != null) {
+        if (orderEntity == null) {
+            // Lança a exceção NotFoundException
+            throw new NotFoundException("Pedido não encontrado");
+        }
             // Criação do DTO de resposta
             List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
                     .map(item -> {
@@ -94,8 +93,6 @@ public class OrderCase {
                     orderItemResponseDTOs,
                     orderEntity.getTotalOrderValue()
             );
-        }
-        throw new NotFoundException("Pedido não encontrado");
     }
 
     public PaymentStatusDTO checkPaymentStatus(Long id) {
@@ -103,7 +100,7 @@ public class OrderCase {
         PaymentStatusDTO pagamento = gateway.findPaymentStatus(id);
 
         if (pagamento == null) {
-            throw new NotFoundException("Pagamento não encontrado");
+            throw new NotFoundException("Pedido não encontrado");
         }
         return pagamento;
     }

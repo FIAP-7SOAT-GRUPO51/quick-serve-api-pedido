@@ -5,7 +5,6 @@ import br.com.fiap.techchallenge.quickserveapi.application.handler.controllers.O
 import br.com.fiap.techchallenge.quickserveapi.application.handler.external.DatabaseConnection;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.gateway.Gateway;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.http.PaymentClient;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.usecases.OrderCase;
 
@@ -56,8 +55,8 @@ public class QuickServeApiApplication {
 	}
 
 	@Bean
-	public OrderCase orderCase(Gateway gateway, PaymentClient paymentClient, ProductClient productClient) {
-		return new OrderCase(gateway, paymentClient, productClient);
+	public OrderCase orderCase(Gateway gateway, ProductClient productClient) {
+		return new OrderCase(gateway, productClient);
 	}
 
 }

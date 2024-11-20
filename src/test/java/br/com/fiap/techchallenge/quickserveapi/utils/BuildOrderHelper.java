@@ -13,9 +13,9 @@ public abstract class BuildOrderHelper {
 
         order.setId(1L);
         order.setCustomerID(123L);
-        order.setStatus(OrderStatusEnum.RECEBIDO); // Substitua pelo valor do enum necessário
+        order.setStatus(OrderStatusEnum.RECEBIDO);
 
-        order.setPaymentStatus(OrderPaymentStatusEnum.PENDENTE); // Substitua pelo valor do enum necessário
+        order.setPaymentStatus(OrderPaymentStatusEnum.PENDENTE);
 
         // Adicionando um exemplo de OrderItem à lista
         List<OrderDTO> orderItems = new ArrayList<>();

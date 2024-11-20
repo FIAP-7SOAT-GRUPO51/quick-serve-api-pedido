@@ -1,0 +1,316 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > Gateway</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">br.com.fiap.techchallenge.quickserveapi.application.handler.gateway</a>
+</div>
+
+<h1>Coverage Summary for Class: Gateway (br.com.fiap.techchallenge.quickserveapi.application.handler.gateway)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Gateway</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/85)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package br.com.fiap.techchallenge.quickserveapi.application.handler.gateway;
+&nbsp;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.adapters.OrderAdapter;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.external.DatabaseConnection;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.ParametroBd;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;public class Gateway {
+&nbsp;
+&nbsp;    private final DatabaseConnection database;
+&nbsp;
+<b class="nc">&nbsp;    public Gateway(DatabaseConnection database) {</b>
+<b class="nc">&nbsp;        this.database = database;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Long saveOrder(OrderPostEntity orderEntity) {
+<b class="nc">&nbsp;        String[] campos = {&quot;status&quot;, &quot;customer_id&quot;, &quot;payment_status&quot;, &quot;total_order_value&quot;};</b>
+<b class="nc">&nbsp;        ParametroBd[] parametros = new ParametroBd[]{</b>
+<b class="nc">&nbsp;                new ParametroBd(&quot;status&quot;, orderEntity.getStatus().toString()),</b>
+<b class="nc">&nbsp;                new ParametroBd(&quot;customer_id&quot;, orderEntity.getCustomerID()),</b>
+<b class="nc">&nbsp;                new ParametroBd(&quot;payment_status&quot;, orderEntity.getPaymentStatus().toString()),</b>
+<b class="nc">&nbsp;                new ParametroBd(&quot;total_order_value&quot;, orderEntity.getTotalOrderValue())</b>
+&nbsp;        };
+<b class="nc">&nbsp;        System.out.println(&quot;Campos: &quot; + Arrays.toString(campos));</b>
+<b class="nc">&nbsp;        System.out.println(&quot;Parâmetros:&quot;);</b>
+<b class="nc">&nbsp;        for (ParametroBd parametro : parametros) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Nome: &quot; + parametro.getCampo() + &quot;, Valor: &quot; + parametro.getValor());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; result = database.Inserir(&quot;orders&quot;, campos, parametros);</b>
+<b class="nc">&nbsp;        System.out.println(&quot;Resultado da execução da query: &quot; + result);</b>
+<b class="nc">&nbsp;        return result != null &amp;&amp; !result.isEmpty() ? (Long) result.get(0).get(&quot;id&quot;) : null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void saveOrderProduct(Long orderId, Long productId, long quantity) {
+<b class="nc">&nbsp;        String[] campos = {&quot;order_id&quot;, &quot;product_id&quot;, &quot;product_quantity&quot;};</b>
+<b class="nc">&nbsp;        ParametroBd[] parametros = new ParametroBd[]{</b>
+&nbsp;                new ParametroBd(&quot;order_id&quot;, orderId),
+&nbsp;                new ParametroBd(&quot;product_id&quot;, productId),
+<b class="nc">&nbsp;                new ParametroBd(&quot;product_quantity&quot;, quantity)</b>
+&nbsp;        };
+&nbsp;
+<b class="nc">&nbsp;        database.Inserir(&quot;order_products&quot;, campos, parametros);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderEntity findOrderById(Long orderId) {
+&nbsp;        // Definindo os campos que queremos buscar na tabela &#39;orders&#39;
+<b class="nc">&nbsp;        String[] campos = {&quot;order_id&quot;, &quot;status&quot;, &quot;customer_id&quot;, &quot;total_order_value&quot;, &quot;payment_status&quot;};</b>
+&nbsp;
+&nbsp;        // Criando o parâmetro para a consulta (filtrando pelo &#39;order_id&#39;)
+<b class="nc">&nbsp;        ParametroBd[] parametros = {new ParametroBd(&quot;order_id&quot;, orderId)};</b>
+&nbsp;
+&nbsp;        // Buscando o pedido no banco de dados
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; result = database.buscarPorParametros(&quot;orders&quot;, campos, parametros);</b>
+<b class="nc">&nbsp;        System.out.println(&quot;Resultado da execução da query: &quot; + result);</b>
+&nbsp;        // Verificando se algum pedido foi encontrado
+<b class="nc">&nbsp;        if (result == null || result.isEmpty()) {</b>
+<b class="nc">&nbsp;            return null; // Retorna null se não encontrar nenhum pedido com o ID fornecido</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Mapeando os dados da consulta para a entidade OrderEntity
+<b class="nc">&nbsp;        OrderEntity orderEntity = OrderAdapter.mapToOrderEntity(result.get(0)); // Mapeia a primeira linha da consulta</b>
+<b class="nc">&nbsp;        System.out.println(&quot;orderEntity da query: &quot; + orderEntity.getStatus());</b>
+&nbsp;
+&nbsp;        // Agora, podemos carregar os itens do pedido (caso haja)
+<b class="nc">&nbsp;        List&lt;OrderItem&gt; orderItems = findOrderItemsByOrderId(orderId);</b>
+<b class="nc">&nbsp;        orderEntity.setOrderItems(orderItems);</b>
+<b class="nc">&nbsp;        System.out.println(&quot;Resultado da setOrderItems: &quot; + orderItems);</b>
+&nbsp;
+<b class="nc">&nbsp;        return orderEntity; // Retorna o pedido com os itens preenchidos</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;OrderItem&gt; findOrderItemsByOrderId(Long orderId) {
+&nbsp;        // Definindo os campos da tabela &#39;order_items&#39;
+<b class="nc">&nbsp;        String[] campos = {&quot;product_id&quot;, &quot;product_quantity&quot;};</b>
+&nbsp;
+&nbsp;        // Criando o parâmetro para buscar os itens do pedido
+<b class="nc">&nbsp;        ParametroBd[] parametros = {new ParametroBd(&quot;order_id&quot;, orderId)};</b>
+&nbsp;
+&nbsp;        // Buscando os itens associados ao pedido
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; itemsResult = database.buscarPorParametros(&quot;order_products&quot;, campos, parametros);</b>
+&nbsp;
+&nbsp;        // Mapeando os itens encontrados para objetos OrderItem
+<b class="nc">&nbsp;        List&lt;OrderItem&gt; orderItems = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Map&lt;String, Object&gt; itemData : itemsResult) {</b>
+&nbsp;            // Mapeando cada item para a entidade OrderItem
+<b class="nc">&nbsp;            OrderItem item = OrderAdapter.mapToOrderItem(itemData);</b>
+<b class="nc">&nbsp;            orderItems.add(item);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return orderItems; // Retorna a lista de itens do pedido</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;OrderEntity&gt; findAllOrders() {
+&nbsp;        // Definindo os campos que queremos buscar na tabela &#39;orders&#39;
+<b class="nc">&nbsp;        String[] campos = {&quot;order_id&quot;, &quot;status&quot;, &quot;customer_id&quot;, &quot;total_order_value&quot;, &quot;payment_status&quot;};</b>
+&nbsp;
+<b class="nc">&nbsp;        ParametroBd[] parametros = {};</b>
+&nbsp;        // Buscando todos os pedidos na base de dados
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; result = database.buscarPorParametros(&quot;orders&quot;, campos,parametros);</b>
+&nbsp;
+&nbsp;        // Verificando se algum pedido foi encontrado
+<b class="nc">&nbsp;        if (result == null || result.isEmpty()) {</b>
+<b class="nc">&nbsp;            return Collections.emptyList(); // Retorna uma lista vazia se não houver pedidos</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Mapeando os dados da consulta para entidades OrderEntity
+<b class="nc">&nbsp;        List&lt;OrderEntity&gt; orders = result.stream()</b>
+<b class="nc">&nbsp;                .map(orderData -&gt; {</b>
+<b class="nc">&nbsp;                    OrderEntity orderEntity = OrderAdapter.mapToOrderEntity(orderData);</b>
+&nbsp;                    // Carrega os itens de cada pedido
+<b class="nc">&nbsp;                    List&lt;OrderItem&gt; orderItems = findOrderItemsByOrderId(orderEntity.getId());</b>
+<b class="nc">&nbsp;                    orderEntity.setOrderItems(orderItems);</b>
+<b class="nc">&nbsp;                    return orderEntity;</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;
+<b class="nc">&nbsp;        return orders;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderEntity updateOrderStatus(Long orderId, OrderStatusEnum status) {
+<b class="nc">&nbsp;        String[] campos = {&quot;status&quot;};</b>
+<b class="nc">&nbsp;        ParametroBd[] parametros = {</b>
+<b class="nc">&nbsp;                new ParametroBd(&quot;status&quot;, status.toString()),</b>
+&nbsp;                new ParametroBd(&quot;order_id&quot;, orderId)
+&nbsp;        };
+&nbsp;
+&nbsp;        // Atualiza o status no banco de dados
+<b class="nc">&nbsp;        database.Update(&quot;orders&quot;, campos, parametros);</b>
+&nbsp;
+<b class="nc">&nbsp;        return findOrderById(orderId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderEntity updatePaymentStatus(Long orderId, OrderPaymentStatusEnum status) {
+&nbsp;
+<b class="nc">&nbsp;        System.out.println(&quot;status.toString(): &quot; + status.toString());</b>
+<b class="nc">&nbsp;        String[] campos = {&quot;payment_status&quot;};</b>
+<b class="nc">&nbsp;        ParametroBd[] parametros = {</b>
+<b class="nc">&nbsp;                new ParametroBd(&quot;payment_status&quot;, status.toString()),</b>
+&nbsp;                new ParametroBd(&quot;order_id&quot;, orderId)
+&nbsp;        };
+&nbsp;
+&nbsp;        // Atualiza o status no banco de dados
+<b class="nc">&nbsp;        database.Update(&quot;orders&quot;, campos, parametros);</b>
+&nbsp;
+<b class="nc">&nbsp;        return findOrderById(orderId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public PaymentStatusDTO findPaymentStatus(Long orderId) {
+<b class="nc">&nbsp;        String[] campos = {&quot;order_id&quot;, &quot;payment_status&quot;};</b>
+<b class="nc">&nbsp;        ParametroBd[] parametros = {new ParametroBd(&quot;order_id&quot;, orderId)};</b>
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; result = database.buscarPorParametros(&quot;orders&quot;, campos, parametros);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (result != null &amp;&amp; !result.isEmpty()) {</b>
+<b class="nc">&nbsp;            Long orderIdFromDb = (Long) result.get(0).get(&quot;order_id&quot;);</b>
+<b class="nc">&nbsp;            String paymentStatus = result.get(0).get(&quot;payment_status&quot;).toString();</b>
+<b class="nc">&nbsp;            return new PaymentStatusDTO(orderIdFromDb, paymentStatus);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public List&lt;OrderEntity&gt; findOrdersWithSorting(Map&lt;String, Integer&gt; caseFiltros, String sortOrder) {
+&nbsp;        // Definindo os campos que queremos buscar na tabela &#39;orders&#39;
+<b class="nc">&nbsp;        String[] campos = {&quot;order_id&quot;, &quot;status&quot;, &quot;customer_id&quot;, &quot;total_order_value&quot;, &quot;payment_status&quot;};</b>
+&nbsp;
+&nbsp;        // Nenhum parâmetro adicional para filtros neste exemplo
+<b class="nc">&nbsp;        ParametroBd[] parametros = {new ParametroBd(&quot;status&quot;, &quot;FINALIZADO&quot;)};</b>
+&nbsp;
+&nbsp;        // Nenhum filtro adicional para ordenação padrão
+<b class="nc">&nbsp;        String[] filtros = {};</b>
+&nbsp;
+&nbsp;        // Mapeamento de caso para a ordenação
+<b class="nc">&nbsp;        caseFiltros = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        caseFiltros.put(&quot;PRONTO&quot;, 1);</b>
+<b class="nc">&nbsp;        caseFiltros.put(&quot;EM_PREPARACAO&quot;, 2);</b>
+<b class="nc">&nbsp;        caseFiltros.put(&quot;RECEBIDO&quot;, 3);</b>
+&nbsp;
+&nbsp;        // Realizando a consulta com filtros e ordenação
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; resultados = database.buscarPorFiltros(&quot;orders&quot;, campos, parametros, filtros, caseFiltros,  &quot;order_id ASC&quot;);</b>
+&nbsp;
+&nbsp;        // Mapeando os resultados para a entidade OrderEntity
+<b class="nc">&nbsp;        System.out.println(&quot;RESULTADO: &quot; + resultados);</b>
+<b class="nc">&nbsp;        List&lt;OrderEntity&gt; orders = OrderAdapter.mapToOrderEntityList(resultados);</b>
+&nbsp;
+&nbsp;        // Retornando a lista de pedidos com os itens já carregados
+<b class="nc">&nbsp;        orders.forEach(order -&gt; {</b>
+<b class="nc">&nbsp;            List&lt;OrderItem&gt; orderItems = findOrderItemsByOrderId(order.getId());</b>
+<b class="nc">&nbsp;            order.setOrderItems(orderItems);</b>
+&nbsp;        });
+&nbsp;
+<b class="nc">&nbsp;        return orders; // Retorna os pedidos com os itens associados</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-11-18 20:52</div>
+</div>
+</body>
+</html>

@@ -2,10 +2,12 @@ package br.com.fiap.techchallenge.quickserveapi.application.handler.api;
 
 import br.com.fiap.techchallenge.quickserveapi.application.handler.controllers.OrderController;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +23,7 @@ public class Order {
         this.orderController = orderController;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
             summary = "Inserir novo pedido",
@@ -36,8 +38,13 @@ public class Order {
             summary = "Encontrar Pedido por ID",
             description = "Este endpoint é utilizado para encontrar pedido por ID"
     )
-    public OrderResponseDTO FindOrderById(@PathVariable Long id) {
-        return this.orderController.findById(id);
+    public Object FindOrderById(@PathVariable Long id) {
+        try{
+            var pedido = this.orderController.findById(id);
+            return new ResponseEntity<>(pedido, HttpStatus.ACCEPTED).getBody();
+        }catch (NotFoundException notFoundException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
+        }
     }
 
     @GetMapping("/payment/{id}")
@@ -45,8 +52,13 @@ public class Order {
             summary = "Encontrar Status do Pagamento por ID",
             description = "Este endpoint é utilizado para encontrar o status do pagamento do Pedido"
     )
-    public PaymentStatusDTO checkPaymentStatus(@PathVariable Long id) {
-        return this.orderController.checkPaymentStatus(id);
+    public Object checkPaymentStatus(@PathVariable Long id) {
+        try{
+            var pedido = this.orderController.checkPaymentStatus(id);
+            return new ResponseEntity<>(pedido, HttpStatus.ACCEPTED).getBody();
+        }catch (NotFoundException notFoundException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
+        }
     }
 
     @GetMapping("/")
@@ -54,8 +66,15 @@ public class Order {
             summary = "Buscar tudo",
             description = "Este endpoint é utilizado para buscar todos os pedido na base"
     )
-    public List<OrderResponseDTO> findAll() {
-        return orderController.findAll();
+    public Object findAll() {
+        try {
+            List<OrderResponseDTO> orders = orderController.findAll();
+            return new ResponseEntity<>(orders, HttpStatus.OK).getBody();
+        } catch (NotFoundException notFoundException) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundException.getMessage());
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + exception.getMessage());
+        }
     }
 
     @GetMapping("/list")
@@ -70,27 +89,68 @@ public class Order {
         return orderController.findAllSorted(sortOrder);
     }
 
-    @PutMapping("/{id}/{status}")
+
+    @PutMapping(value = "/{id}/{status}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Atualiza o status de um pedido",
             description = "Este endpoint atualiza o status de um pedido com base no ID fornecido e no novo status."
     )
-    public OrderResponseDTO updateOrderEntityStatus(@PathVariable Long id, @PathVariable OrderStatusEnum status){
-        OrderResponseDTO order = this.orderController.findById(id);
-        order.setStatus(status.toString()); // Alterar para status do tipo Enum
-        return this.orderController.updateStatus(order);
+    public ResponseEntity<Object> updateOrderEntityStatus(@PathVariable Long id, @PathVariable OrderStatusEnum status) {
+        try {
+            // Busca o pedido pelo ID
+            OrderResponseDTO order = this.orderController.findById(id);
+
+            // Verifica se o pedido foi encontrado
+            if (order == null) {
+                throw new NotFoundException("Pedido não encontrado");
+            }
+            // Atualiza o status do pedido
+            order.setStatus(status.toString());
+
+            // Chama o método para atualizar o status do pedido no controlador
+            this.orderController.updateStatus(order);
+
+            // Retorna a resposta com o status HTTP 202 Accepted
+            return new ResponseEntity<>(order, HttpStatus.ACCEPTED);
+        } catch (NotFoundException notFoundException) {
+            // Caso o pedido não seja encontrado, retorna o erro com o status HTTP 400 Bad Request
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
+        } catch (Exception e) {
+            // Caso ocorra outro erro, retorna o erro genérico com o status HTTP 500 Internal Server Error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar o pedido: " + e.getMessage());
+        }
     }
 
-    @PutMapping("/payment-approver/{id}/{statusPayment}")
+    @PutMapping(value = "/payment-approver/{id}/{statusPayment}",consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Atualiza o status do pagamento",
             description = "Este endpoint atualiza o status do pagamento do pedido"
     )
-    public OrderResponseDTO paymentApprover(@PathVariable Long id, @PathVariable  OrderPaymentStatusEnum statusPayment) {
+    public ResponseEntity<Object> paymentApprover(@PathVariable Long id, @PathVariable OrderPaymentStatusEnum statusPayment) {
+        try {
+            // Busca o pedido pelo ID
+            OrderResponseDTO order = this.orderController.findById(id);
 
-        OrderResponseDTO order = this.orderController.findById(id);
-        order.setPaymentStatus(String.valueOf(statusPayment));
-        return this.orderController.paymentApprover(order);
+            // Verifica se o pedido foi encontrado
+            if (order == null) {
+                throw new NotFoundException("Pedido não encontrado");
+            }
+
+            // Atualiza o status de pagamento do pedido
+            order.setPaymentStatus(statusPayment.toString());
+
+            // Chama o método para aprovar o pagamento
+            this.orderController.paymentApprover(order);
+
+            // Retorna a resposta com o status HTTP 202 Accepted
+            return new ResponseEntity<>(order, HttpStatus.ACCEPTED);
+        } catch (NotFoundException notFoundException) {
+            // Caso o pedido não seja encontrado, retorna o erro com o status HTTP 400 Bad Request
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
+        } catch (Exception e) {
+            // Caso ocorra outro erro, retorna o erro genérico com o status HTTP 500 Internal Server Error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar o pagamento do pedido: " + e.getMessage());
+        }
     }
 }
 

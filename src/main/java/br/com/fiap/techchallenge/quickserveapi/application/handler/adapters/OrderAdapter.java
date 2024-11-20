@@ -2,8 +2,6 @@ package br.com.fiap.techchallenge.quickserveapi.application.handler.adapters;
 
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -124,7 +122,7 @@ public class OrderAdapter {
     // Métodos de mapeamento para listas
     public static OrderEntity mapToOrderEntityEntity(List<Map<String, Object>> results) {
         if (results == null || results.isEmpty()) {
-            throw new RuntimeException("Ordem não encontrada");
+            throw new RuntimeException("Order não encontrada");
         }
         Map<String, Object> row = results.get(0);
         return new OrderAdapter().mapSingleToOrderEntity(row); // Usando instância para chamar o método
@@ -132,7 +130,7 @@ public class OrderAdapter {
 
     public static List<OrderEntity> mapToOrderEntityList(List<Map<String, Object>> results) {
         if (results == null || results.isEmpty()) {
-            throw new RuntimeException("Ordem não encontrada");
+            throw new RuntimeException("Order não encontrada");
         }
         List<OrderEntity> orders = new ArrayList<>();
         for (Map<String, Object> row : results) {

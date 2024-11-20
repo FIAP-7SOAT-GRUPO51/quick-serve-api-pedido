@@ -1,0 +1,91 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ProductClient</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">br.com.fiap.techchallenge.quickserveapi.application.handler.http</a>
+</div>
+
+<h1>Coverage Summary for Class: ProductClient (br.com.fiap.techchallenge.quickserveapi.application.handler.http)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">ProductClient</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package br.com.fiap.techchallenge.quickserveapi.application.handler.http;
+&nbsp;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.ProductDTO;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.cloud.openfeign.FeignClient;
+&nbsp;import org.springframework.web.bind.annotation.GetMapping;
+&nbsp;import org.springframework.web.bind.annotation.PathVariable;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.logging.Logger;
+&nbsp;
+&nbsp;
+&nbsp;@FeignClient(name = &quot;quick-serve&quot;, url = &quot;http://localhost:8081/quick_service&quot;)
+&nbsp;public interface ProductClient {
+&nbsp;
+&nbsp;    // Método para buscar um produto por ID
+&nbsp;    @GetMapping(&quot;/products/{id}&quot;)
+&nbsp;    ProductDTO getProductById(@PathVariable Long id); // Correção no PathVariable
+&nbsp;
+&nbsp;    // Método para buscar produtos relacionados a um pedido (exemplo, se precisar disso)
+&nbsp;    //@GetMapping(&quot;/products/by-order/{orderId}&quot;)
+&nbsp;    //List&lt;ProductDTO&gt; getProductsByOrderId(@PathVariable(&quot;orderId&quot;) Long orderId); // Correção no PathVariable
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-11-18 20:52</div>
+</div>
+</body>
+</html>

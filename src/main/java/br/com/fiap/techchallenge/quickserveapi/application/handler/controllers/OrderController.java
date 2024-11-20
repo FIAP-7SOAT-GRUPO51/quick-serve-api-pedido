@@ -1,6 +1,5 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.controllers;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderEntity;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPostEntity;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderResponseDTO;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.PaymentStatusDTO;
@@ -43,7 +42,4 @@ public class OrderController {
     public OrderResponseDTO paymentApprover(OrderResponseDTO order) {
         return orderCase.updatePayment(order);
     }
-
-
-
 }

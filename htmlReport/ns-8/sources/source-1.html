@@ -1,0 +1,435 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > DatabaseConnection</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">br.com.fiap.techchallenge.quickserveapi.application.handler.external</a>
+</div>
+
+<h1>Coverage Summary for Class: DatabaseConnection (br.com.fiap.techchallenge.quickserveapi.application.handler.external)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DatabaseConnection</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/124)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/163)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package br.com.fiap.techchallenge.quickserveapi.application.handler.external;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.ParametroBd;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.dbconnection;
+&nbsp;
+&nbsp;import java.sql.*;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;public class DatabaseConnection implements dbconnection {
+&nbsp;    private final String url;
+&nbsp;    private final String user;
+&nbsp;    private final String password;
+&nbsp;
+<b class="nc">&nbsp;    public DatabaseConnection(String url, String user, String password) {</b>
+<b class="nc">&nbsp;        this.url = url;</b>
+<b class="nc">&nbsp;        this.user = user;</b>
+<b class="nc">&nbsp;        this.password = password;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Connection connect() {
+<b class="nc">&nbsp;        Connection connection = null;</b>
+&nbsp;        try {
+&nbsp;            // Registrar o driver JDBC
+<b class="nc">&nbsp;            Class.forName(&quot;org.postgresql.Driver&quot;);</b>
+&nbsp;
+&nbsp;            // Estabelecer a conexão
+<b class="nc">&nbsp;            connection = DriverManager.getConnection(url, user, password);</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Conexão estabelecida com sucesso!&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        } catch (SQLException e) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Erro ao conectar ao banco de dados: &quot; + e.getMessage());</b>
+<b class="nc">&nbsp;        } catch (ClassNotFoundException e) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Driver JDBC não encontrado: &quot; + e.getMessage());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return connection;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getTableIdColumn(Connection connection, String tabela) throws SQLException {
+<b class="nc">&nbsp;        String primaryKeyColumn = null;</b>
+&nbsp;
+&nbsp;        // Obtenha os metadados do banco de dados
+<b class="nc">&nbsp;        DatabaseMetaData metaData = connection.getMetaData();</b>
+&nbsp;
+&nbsp;        // Obtenha as chaves primárias da tabela
+<b class="nc">&nbsp;        try (ResultSet rs = metaData.getPrimaryKeys(null, null, tabela)) {</b>
+<b class="nc">&nbsp;            if (rs.next()) {</b>
+<b class="nc">&nbsp;                primaryKeyColumn = rs.getString(&quot;COLUMN_NAME&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        if (primaryKeyColumn == null) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Nenhuma chave primária encontrada para a tabela: &quot; + tabela);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return primaryKeyColumn;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Map&lt;String, Object&gt;&gt; Inserir(String tabela, String[] campos, ParametroBd[] parametros) {
+<b class="nc">&nbsp;        StringBuilder query = new StringBuilder(&quot;INSERT INTO &quot;);</b>
+<b class="nc">&nbsp;        query.append(tabela).append(&quot; (&quot;);</b>
+&nbsp;
+&nbsp;        // Adiciona os campos na query
+<b class="nc">&nbsp;        for (int i = 0; i &lt; campos.length; i++) {</b>
+<b class="nc">&nbsp;            query.append(campos[i]);</b>
+<b class="nc">&nbsp;            if (i &lt; campos.length - 1) {</b>
+<b class="nc">&nbsp;                query.append(&quot;, &quot;);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        query.append(&quot;) VALUES (&quot;);</b>
+&nbsp;
+&nbsp;        // Adiciona os placeholders para os valores na query
+<b class="nc">&nbsp;        for (int i = 0; i &lt; parametros.length; i++) {</b>
+<b class="nc">&nbsp;            query.append(&quot;?&quot;);</b>
+<b class="nc">&nbsp;            if (i &lt; parametros.length - 1) {</b>
+<b class="nc">&nbsp;                query.append(&quot;, &quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Adiciona a parte RETURNING
+&nbsp;        String idColumn;
+<b class="nc">&nbsp;        try (Connection connection = connect()) {</b>
+<b class="nc">&nbsp;            idColumn = getTableIdColumn(connection, tabela);</b>
+<b class="nc">&nbsp;        } catch (SQLException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Erro ao obter a coluna de ID da tabela: &quot; + tabela, e);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        query.append(&quot;) RETURNING &quot;)</b>
+<b class="nc">&nbsp;                .append(idColumn)</b>
+<b class="nc">&nbsp;                .append(&quot;;&quot;);</b>
+&nbsp;
+&nbsp;        // Exibe a query construída
+<b class="nc">&nbsp;        System.out.println(&quot;Query construída: &quot; + query.toString());</b>
+&nbsp;
+<b class="nc">&nbsp;        return executarQuery(query.toString(), parametros, campos);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Map&lt;String, Object&gt;&gt; deletar(String tabela, String[] campos, ParametroBd[] parametros) {
+&nbsp;        // Validação básica
+<b class="nc">&nbsp;        if (campos.length != parametros.length) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Número de campos e parâmetros não corresponde&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Construção da query
+<b class="nc">&nbsp;        StringBuilder query = new StringBuilder(&quot;DELETE FROM &quot;);</b>
+<b class="nc">&nbsp;        query.append(tabela).append(&quot; WHERE &quot;);</b>
+&nbsp;
+&nbsp;        // Adiciona os campos na query
+<b class="nc">&nbsp;        for (int i = 0; i &lt; campos.length; i++) {</b>
+<b class="nc">&nbsp;            query.append(campos[i]).append(&quot; = ?&quot;);</b>
+<b class="nc">&nbsp;            if (i &lt; campos.length - 1) {</b>
+<b class="nc">&nbsp;                query.append(&quot; AND &quot;);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        query.append(&quot;;&quot;);</b>
+&nbsp;
+&nbsp;        // Exibe a query construída
+<b class="nc">&nbsp;        System.out.println(&quot;Query construída: &quot; + query.toString());</b>
+&nbsp;
+<b class="nc">&nbsp;        return executarQuery(query.toString(), parametros,campos);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Map&lt;String, Object&gt;&gt; Update(String tabela, String[] campos, ParametroBd[] parametros) {
+<b class="nc">&nbsp;        StringBuilder query = new StringBuilder(&quot;UPDATE &quot;);</b>
+<b class="nc">&nbsp;        query.append(tabela).append(&quot; SET &quot;);</b>
+&nbsp;
+&nbsp;        // Adiciona os campos na query
+<b class="nc">&nbsp;        for (int i = 0; i &lt; campos.length; i++) {</b>
+<b class="nc">&nbsp;            query.append(campos[i]).append(&quot; = ?&quot;);</b>
+<b class="nc">&nbsp;            if (i &lt; campos.length - 1) {</b>
+<b class="nc">&nbsp;                query.append(&quot;, &quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        String idColumn;
+<b class="nc">&nbsp;        try (Connection connection = connect()) {</b>
+<b class="nc">&nbsp;            idColumn = getTableIdColumn(connection, tabela);</b>
+<b class="nc">&nbsp;        } catch (SQLException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Erro ao obter a coluna de ID da tabela: &quot; + tabela, e);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        query.append(&quot; WHERE &quot;)</b>
+<b class="nc">&nbsp;                .append(idColumn)</b>
+<b class="nc">&nbsp;                .append(&quot;= ? ;&quot;);</b>
+&nbsp;
+&nbsp;        // Exibe a query construída
+<b class="nc">&nbsp;        System.out.println(&quot;Query construída: &quot; + query.toString());</b>
+&nbsp;
+<b class="nc">&nbsp;        return executarQuery(query.toString(), parametros,campos);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Map&lt;String, Object&gt;&gt; buscarPorParametros(String tabela, String[] campos, ParametroBd[] parametros) {
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; resultados = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        StringBuilder query = new StringBuilder(&quot;SELECT &quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (campos == null || campos.length == 0) {</b>
+<b class="nc">&nbsp;            query.append(&quot;*&quot;);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            for (int i = 0; i &lt; campos.length; i++) {</b>
+<b class="nc">&nbsp;                query.append(campos[i]);</b>
+<b class="nc">&nbsp;                if (i &lt; campos.length - 1) {</b>
+<b class="nc">&nbsp;                    query.append(&quot;, &quot;);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        query.append(&quot; FROM &quot;).append(tabela);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (parametros != null &amp;&amp; parametros.length &gt; 0) {</b>
+<b class="nc">&nbsp;            query.append(&quot; WHERE &quot;);</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; parametros.length; i++) {</b>
+<b class="nc">&nbsp;                query.append(parametros[i].getCampo()).append(&quot; = ?&quot;);</b>
+<b class="nc">&nbsp;                if (i &lt; parametros.length - 1) {</b>
+<b class="nc">&nbsp;                    query.append(&quot; AND &quot;);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Exibe a query construída
+<b class="nc">&nbsp;        System.out.println(&quot;Query construída: &quot; + query.toString());</b>
+&nbsp;        // Log dos parâmetros
+<b class="nc">&nbsp;        if (parametros != null &amp;&amp; parametros.length &gt; 0) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;PARÂMETROS:&quot;);</b>
+<b class="nc">&nbsp;            for (ParametroBd parametro : parametros) {</b>
+<b class="nc">&nbsp;                System.out.println(&quot;Campo: &quot; + parametro.getCampo() + &quot;, Valor: &quot; + parametro.getValor());</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            System.out.println(&quot;Nenhum parâmetro fornecido.&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Log dos campos
+&nbsp;        //System.out.println(&quot;CAMPOS: &quot; + Arrays.toString(campos));
+&nbsp;
+<b class="nc">&nbsp;        return executarQuery(query.toString(), parametros, campos);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Map&lt;String, Object&gt;&gt; executarQuery(String query, ParametroBd[] parametros, String[] campos) {
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; resultados = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        try (Connection connection = connect();</b>
+<b class="nc">&nbsp;             PreparedStatement preparedStatement = connection.prepareStatement(query)) {</b>
+&nbsp;
+<b class="nc">&nbsp;            if (parametros != null) {</b>
+<b class="nc">&nbsp;                for (int i = 0; i &lt; parametros.length; i++) {</b>
+<b class="nc">&nbsp;                    if (parametros[i].getValor() instanceof String) {</b>
+<b class="nc">&nbsp;                        preparedStatement.setString(i + 1, (String) parametros[i].getValor());</b>
+<b class="nc">&nbsp;                    } else if (parametros[i].getValor() instanceof Integer) {</b>
+<b class="nc">&nbsp;                        preparedStatement.setInt(i + 1, (Integer) parametros[i].getValor());</b>
+<b class="nc">&nbsp;                    } else if (parametros[i].getValor() instanceof Long) {</b>
+<b class="nc">&nbsp;                        preparedStatement.setLong(i + 1, (Long) parametros[i].getValor());</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        preparedStatement.setObject(i + 1, parametros[i].getValor());</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            //System.out.println(&quot;Query antes da execução: &quot; + preparedStatement); // Verifica a query completa antes de executar
+&nbsp;
+<b class="nc">&nbsp;            if (query.trim().toUpperCase().startsWith(&quot;SELECT&quot;)) {</b>
+<b class="nc">&nbsp;                ResultSet resultSet = preparedStatement.executeQuery();</b>
+<b class="nc">&nbsp;                ResultSetMetaData metaData = resultSet.getMetaData();</b>
+<b class="nc">&nbsp;                int columnCount = metaData.getColumnCount(); // Obter o número de colunas na resposta</b>
+&nbsp;
+<b class="nc">&nbsp;                while (resultSet.next()) {</b>
+<b class="nc">&nbsp;                    Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;                    for (int i = 1; i &lt;= columnCount; i++) { // Loop pelas colunas com índice baseado em 1</b>
+<b class="nc">&nbsp;                        String columnName = metaData.getColumnName(i); // Obter o nome da coluna</b>
+<b class="nc">&nbsp;                        row.put(columnName, resultSet.getObject(i)); // Inserir o valor no map</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                    resultados.add(row);</b>
+&nbsp;                }
+<b class="nc">&nbsp;            } else if (query.trim().toUpperCase().startsWith(&quot;INSERT&quot;)) {</b>
+<b class="nc">&nbsp;                ResultSet resultSet = preparedStatement.executeQuery();</b>
+&nbsp;
+<b class="nc">&nbsp;                if (resultSet.next()) {</b>
+<b class="nc">&nbsp;                    Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;                    row.put(&quot;id&quot;, resultSet.getObject(1));</b>
+<b class="nc">&nbsp;                    resultados.add(row);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    throw new RuntimeException(&quot;Nenhum ID retornado pela operação de inserção.&quot;);</b>
+&nbsp;                }
+&nbsp;            } else {
+<b class="nc">&nbsp;                int affectedRows = preparedStatement.executeUpdate();</b>
+&nbsp;
+<b class="nc">&nbsp;                if (affectedRows &lt;= 0) {</b>
+<b class="nc">&nbsp;                    Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;                    row.put(&quot;Mensagem&quot;, &quot;Operação não foi executada, número de registros afetados foi: &quot; + affectedRows);</b>
+<b class="nc">&nbsp;                    resultados.add(row);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;                    row.put(&quot;Mensagem&quot;, &quot;Operação bem-sucedida, número de registros afetados: &quot; + affectedRows);</b>
+<b class="nc">&nbsp;                    resultados.add(row);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (SQLException e) {</b>
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            row.put(&quot;Erro&quot;, &quot;Erro na operação: &quot; + e.getMessage());</b>
+<b class="nc">&nbsp;            resultados.add(row);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return resultados;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Map&lt;String, Object&gt;&gt; buscarPorFiltros(String tabela, String[] campos, ParametroBd[] parametros, String[] filtros, Map&lt;String, Integer&gt; caseFiltros, String defaultOrder) {
+<b class="nc">&nbsp;        List&lt;Map&lt;String, Object&gt;&gt; resultados = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        StringBuilder query = new StringBuilder(&quot;SELECT &quot;);</b>
+&nbsp;
+&nbsp;        // Adiciona os campos na query
+<b class="nc">&nbsp;        if (campos == null || campos.length == 0) {</b>
+<b class="nc">&nbsp;            query.append(&quot;*&quot;);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            for (int i = 0; i &lt; campos.length; i++) {</b>
+<b class="nc">&nbsp;                query.append(campos[i]);</b>
+<b class="nc">&nbsp;                if (i &lt; campos.length - 1) {</b>
+<b class="nc">&nbsp;                    query.append(&quot;, &quot;);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Adiciona a tabela na query
+<b class="nc">&nbsp;        query.append(&quot; FROM &quot;).append(tabela);</b>
+&nbsp;
+&nbsp;        // Adiciona a cláusula WHERE com parâmetros
+<b class="nc">&nbsp;        if (parametros != null &amp;&amp; parametros.length &gt; 0) {</b>
+<b class="nc">&nbsp;            query.append(&quot; WHERE &quot;);</b>
+<b class="nc">&nbsp;            for (ParametroBd parametro : parametros) {</b>
+<b class="nc">&nbsp;                query.append(parametro.getCampo()).append(&quot; != ?&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;        // Adiciona a cláusula ORDER BY
+<b class="nc">&nbsp;        if (caseFiltros != null &amp;&amp; !caseFiltros.isEmpty()) {</b>
+<b class="nc">&nbsp;            for (ParametroBd parametro : parametros) {</b>
+<b class="nc">&nbsp;                query.append(&quot; ORDER BY CASE &quot;).append(parametro.getCampo());</b>
+&nbsp;            }
+<b class="nc">&nbsp;            for (Map.Entry&lt;String, Integer&gt; entry : caseFiltros.entrySet()) {</b>
+<b class="nc">&nbsp;                query.append(&quot; WHEN &#39;&quot;).append(entry.getKey()).append(&quot;&#39; THEN &quot;).append(entry.getValue()).append(&quot; &quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            query.append(&quot;END&quot;);</b>
+<b class="nc">&nbsp;            if (defaultOrder != null &amp;&amp; !defaultOrder.isEmpty()) {</b>
+<b class="nc">&nbsp;                query.append(&quot;, &quot;).append(defaultOrder);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } else if (filtros != null &amp;&amp; filtros.length &gt; 0) {</b>
+<b class="nc">&nbsp;            query.append(&quot; ORDER BY &quot;);</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; filtros.length; i++) {</b>
+<b class="nc">&nbsp;                query.append(filtros[i]);</b>
+<b class="nc">&nbsp;                if (i &lt; filtros.length - 1) {</b>
+<b class="nc">&nbsp;                    query.append(&quot;, &quot;);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;        } else if (defaultOrder != null &amp;&amp; !defaultOrder.isEmpty()) {</b>
+<b class="nc">&nbsp;            query.append(&quot; ORDER BY &quot;).append(defaultOrder);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Exibe a query construída
+<b class="nc">&nbsp;        System.out.println(&quot;Query construída: &quot; + query.toString());</b>
+&nbsp;
+&nbsp;        // Executa a query com todos os parâmetros e campos
+<b class="nc">&nbsp;        return executarQuery(query.toString(), parametros, campos);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-11-18 20:52</div>
+</div>
+</body>
+</html>

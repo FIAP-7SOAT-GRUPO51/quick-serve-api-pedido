@@ -1,0 +1,412 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > OrderCase</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">br.com.fiap.techchallenge.quickserveapi.application.handler.usecases</a>
+</div>
+
+<h1>Coverage Summary for Class: OrderCase (br.com.fiap.techchallenge.quickserveapi.application.handler.usecases)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OrderCase</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/145)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package br.com.fiap.techchallenge.quickserveapi.application.handler.usecases;
+&nbsp;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.NotFoundException;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.gateway.Gateway;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.http.PaymentClient;
+&nbsp;import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;public class OrderCase {
+&nbsp;
+&nbsp;    private final Gateway gateway;
+&nbsp;    private final PaymentClient paymentClient;
+&nbsp;    private final ProductClient productClient;
+&nbsp;
+<b class="nc">&nbsp;    public OrderCase(Gateway gateway, PaymentClient paymentClient, ProductClient productClient) {</b>
+<b class="nc">&nbsp;        this.gateway = gateway;</b>
+<b class="nc">&nbsp;        this.paymentClient = paymentClient;</b>
+<b class="nc">&nbsp;        this.productClient = productClient;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderResponseDTO save(OrderPostEntity orderEntity) {
+&nbsp;        // Pega a lista de OrderDTOs, não um único OrderDTO
+<b class="nc">&nbsp;        List&lt;OrderDTO&gt; orderDTOs = orderEntity.getOrderDTOs();</b>
+&nbsp;
+<b class="nc">&nbsp;        OrderDTO produto = orderDTOs.get(0); // Aqui você pega o primeiro item da lista.</b>
+&nbsp;
+&nbsp;        // Obtém o produto correspondente através do cliente
+<b class="nc">&nbsp;        ProductDTO product = productClient.getProductById(produto.getId());</b>
+&nbsp;
+&nbsp;        // Calcula o valor do pedido com base no preço do produto e quantidade do pedido
+<b class="nc">&nbsp;        Double valorPedido = product.getPrice() * produto.getQuantity();</b>
+&nbsp;
+&nbsp;        // Define o valor total do pedido no orderEntity
+<b class="nc">&nbsp;        orderEntity.setTotalOrderValue(valorPedido);</b>
+&nbsp;
+&nbsp;        // Salva o pedido e obtém o ID do pedido gerado
+<b class="nc">&nbsp;        Long orderId = gateway.saveOrder(orderEntity);</b>
+<b class="nc">&nbsp;        orderEntity.setId(orderId);</b>
+&nbsp;
+&nbsp;        // Salva cada item do pedido na base de dados
+<b class="nc">&nbsp;        orderDTOs.forEach(item -&gt; {</b>
+<b class="nc">&nbsp;            gateway.saveOrderProduct(orderId, item.getId(), item.getQuantity());</b>
+&nbsp;        });
+&nbsp;
+<b class="nc">&nbsp;        return findById(orderId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderResponseDTO findById(Long id) {
+&nbsp;        // Recupera o pedido do gateway
+<b class="nc">&nbsp;        OrderEntity orderEntity = gateway.findOrderById(id);</b>
+<b class="nc">&nbsp;        if (orderEntity != null) {</b>
+&nbsp;            // Criação do DTO de resposta
+<b class="nc">&nbsp;            List&lt;OrderItemResponseDTO&gt; orderItemResponseDTOs = orderEntity.getOrderItems().stream()</b>
+<b class="nc">&nbsp;                    .map(item -&gt; {</b>
+<b class="nc">&nbsp;                        ProductDTO product = productClient.getProductById(item.getProductId());</b>
+<b class="nc">&nbsp;                        if (product != null) {</b>
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+<b class="nc">&nbsp;                                    product.getName(),</b>
+<b class="nc">&nbsp;                                    product.getCategory(),</b>
+<b class="nc">&nbsp;                                    product.getPrice(),</b>
+<b class="nc">&nbsp;                                    product.getDescription(),</b>
+<b class="nc">&nbsp;                                    product.getImagePath()</b>
+&nbsp;                            );
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+&nbsp;                                    &quot;Produto não encontrado&quot;,
+&nbsp;                                    &quot;N/A&quot;,
+<b class="nc">&nbsp;                                    0.0,</b>
+&nbsp;                                    &quot;Sem descrição&quot;,
+&nbsp;                                    &quot;Sem imagem&quot;
+&nbsp;                            );
+&nbsp;                        }
+&nbsp;                    })
+<b class="nc">&nbsp;                    .collect(Collectors.toList());</b>
+&nbsp;
+&nbsp;
+&nbsp;            // Certifique-se de que os valores estão corretos
+<b class="nc">&nbsp;            System.out.println(&quot;orderItemResponseDTOs: &quot; + orderItemResponseDTOs);</b>
+&nbsp;
+&nbsp;            // Retorno do DTO preenchido
+<b class="nc">&nbsp;            return new OrderResponseDTO(</b>
+<b class="nc">&nbsp;                    orderEntity.getId(),</b>
+<b class="nc">&nbsp;                    String.valueOf(orderEntity.getCustomerID()),</b>
+<b class="nc">&nbsp;                    orderEntity.getStatus(),</b>
+<b class="nc">&nbsp;                    orderEntity.getPaymentStatus(),</b>
+&nbsp;                    orderItemResponseDTOs,
+<b class="nc">&nbsp;                    orderEntity.getTotalOrderValue()</b>
+&nbsp;            );
+&nbsp;        }
+<b class="nc">&nbsp;        throw new NotFoundException(&quot;Pedido não encontrado&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public PaymentStatusDTO checkPaymentStatus(Long id) {
+&nbsp;        // Recupera o pedido do gateway
+<b class="nc">&nbsp;        PaymentStatusDTO pagamento = gateway.findPaymentStatus(id);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (pagamento == null) {</b>
+<b class="nc">&nbsp;            throw new NotFoundException(&quot;Pagamento não encontrado&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return pagamento;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;OrderResponseDTO&gt; findAll() {
+&nbsp;        // Recupera todos os pedidos
+<b class="nc">&nbsp;        List&lt;OrderEntity&gt; orderEntities = gateway.findAllOrders();</b>
+<b class="nc">&nbsp;        List&lt;OrderResponseDTO&gt; orderResponseDTOs = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (OrderEntity orderEntity : orderEntities) {</b>
+&nbsp;            // Para cada pedido, cria os itens de resposta com os produtos
+<b class="nc">&nbsp;            List&lt;OrderItemResponseDTO&gt; orderItemResponseDTOs = orderEntity.getOrderItems().stream()</b>
+<b class="nc">&nbsp;                    .map(item -&gt; {</b>
+&nbsp;                        // Consultando o produto para cada item do pedido
+<b class="nc">&nbsp;                        ProductDTO product = productClient.getProductById(item.getProductId());</b>
+<b class="nc">&nbsp;                        if (product != null) {</b>
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+<b class="nc">&nbsp;                                    product.getName(),</b>
+<b class="nc">&nbsp;                                    product.getCategory(),</b>
+<b class="nc">&nbsp;                                    product.getPrice(),</b>
+<b class="nc">&nbsp;                                    product.getDescription(),</b>
+<b class="nc">&nbsp;                                    product.getImagePath()</b>
+&nbsp;                            );
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+&nbsp;                                    &quot;Produto não encontrado&quot;,
+&nbsp;                                    &quot;N/A&quot;,
+<b class="nc">&nbsp;                                    0.0,</b>
+&nbsp;                                    &quot;Sem descrição&quot;,
+&nbsp;                                    &quot;Sem imagem&quot;
+&nbsp;                            );
+&nbsp;                        }
+&nbsp;                    })
+<b class="nc">&nbsp;                    .collect(Collectors.toList());</b>
+&nbsp;
+&nbsp;            // Adiciona o DTO do pedido à lista de respostas
+<b class="nc">&nbsp;            orderResponseDTOs.add(new OrderResponseDTO(</b>
+<b class="nc">&nbsp;                    orderEntity.getId(),</b>
+<b class="nc">&nbsp;                    String.valueOf(orderEntity.getCustomerID()),</b>
+<b class="nc">&nbsp;                    orderEntity.getStatus(),</b>
+<b class="nc">&nbsp;                    orderEntity.getPaymentStatus(),</b>
+&nbsp;                    orderItemResponseDTOs,
+<b class="nc">&nbsp;                    orderEntity.getTotalOrderValue()</b>
+&nbsp;            ));
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return orderResponseDTOs; // Retorna a lista de pedidos com os produtos</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;OrderResponseDTO&gt; listByFiltersWithSorting(String sortOrder) {
+&nbsp;        // Mapeamento de caso para a ordenação
+<b class="nc">&nbsp;        Map&lt;String, Integer&gt; caseFiltros = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        caseFiltros.put(&quot;PRONTO&quot;, 1);</b>
+<b class="nc">&nbsp;        caseFiltros.put(&quot;EM_PREPARACAO&quot;, 2);</b>
+<b class="nc">&nbsp;        caseFiltros.put(&quot;RECEBIDO&quot;, 3);</b>
+&nbsp;
+&nbsp;        // Chama o Gateway para buscar os pedidos com a ordenação e filtros
+<b class="nc">&nbsp;        List&lt;OrderEntity&gt; orderEntities = gateway.findOrdersWithSorting(caseFiltros, sortOrder);</b>
+&nbsp;
+&nbsp;        // Mapeia os resultados para DTOs de pedido e enriquece com os dados dos produtos
+<b class="nc">&nbsp;        return orderEntities.stream()</b>
+<b class="nc">&nbsp;                .map(orderEntity -&gt; {</b>
+&nbsp;                    // Enriquecer os itens do pedido com os dados dos produtos
+<b class="nc">&nbsp;                    List&lt;OrderItemResponseDTO&gt; orderItemResponseDTOs = orderEntity.getOrderItems().stream()</b>
+<b class="nc">&nbsp;                            .map(item -&gt; {</b>
+&nbsp;                                // Enriquecer os dados de produto usando o client
+<b class="nc">&nbsp;                                ProductDTO product = productClient.getProductById(item.getProductId());</b>
+<b class="nc">&nbsp;                                if (product != null) {</b>
+<b class="nc">&nbsp;                                    return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                            item.getProductId(),</b>
+<b class="nc">&nbsp;                                            product.getName(),</b>
+<b class="nc">&nbsp;                                            product.getCategory(),</b>
+<b class="nc">&nbsp;                                            product.getPrice(),</b>
+<b class="nc">&nbsp;                                            product.getDescription(),</b>
+<b class="nc">&nbsp;                                            product.getImagePath()</b>
+&nbsp;                                    );
+&nbsp;                                } else {
+<b class="nc">&nbsp;                                    return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                            item.getProductId(),</b>
+&nbsp;                                            &quot;Produto não encontrado&quot;,
+&nbsp;                                            &quot;N/A&quot;,
+<b class="nc">&nbsp;                                            0.0,</b>
+&nbsp;                                            &quot;Sem descrição&quot;,
+&nbsp;                                            &quot;Sem imagem&quot;
+&nbsp;                                    );
+&nbsp;                                }
+&nbsp;                            })
+<b class="nc">&nbsp;                            .collect(Collectors.toList());</b>
+&nbsp;                    // Retorna o DTO do pedido enriquecido
+<b class="nc">&nbsp;                    return new OrderResponseDTO(</b>
+<b class="nc">&nbsp;                            orderEntity.getId(),</b>
+<b class="nc">&nbsp;                            String.valueOf(orderEntity.getCustomerID()),</b>
+<b class="nc">&nbsp;                            orderEntity.getStatus(),</b>
+<b class="nc">&nbsp;                            orderEntity.getPaymentStatus(),</b>
+&nbsp;                            orderItemResponseDTOs,
+<b class="nc">&nbsp;                            orderEntity.getTotalOrderValue()</b>
+&nbsp;                    );
+&nbsp;                })
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderResponseDTO updateStatus(OrderResponseDTO order) {
+&nbsp;        // Assegure que o status está sendo passado como OrderStatusEnum
+<b class="nc">&nbsp;        OrderEntity orderEntity = gateway.updateOrderStatus(order.getId(), OrderStatusEnum.valueOf(order.getStatus()));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (orderEntity != null) {</b>
+&nbsp;            // Mapeamento dos itens do pedido
+<b class="nc">&nbsp;            List&lt;OrderItemResponseDTO&gt; orderItemResponseDTOs = orderEntity.getOrderItems().stream()</b>
+<b class="nc">&nbsp;                    .map(item -&gt; {</b>
+<b class="nc">&nbsp;                        ProductDTO product = productClient.getProductById(item.getProductId());</b>
+<b class="nc">&nbsp;                        if (product != null) {</b>
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+<b class="nc">&nbsp;                                    product.getName(),</b>
+<b class="nc">&nbsp;                                    product.getCategory(),</b>
+<b class="nc">&nbsp;                                    product.getPrice(),</b>
+<b class="nc">&nbsp;                                    product.getDescription(),</b>
+<b class="nc">&nbsp;                                    product.getImagePath()</b>
+&nbsp;                            );
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+&nbsp;                                    &quot;Produto não encontrado&quot;,
+&nbsp;                                    &quot;N/A&quot;,
+<b class="nc">&nbsp;                                    0.0,</b>
+&nbsp;                                    &quot;Sem descrição&quot;,
+&nbsp;                                    &quot;Sem imagem&quot;
+&nbsp;                            );
+&nbsp;                        }
+&nbsp;                    })
+<b class="nc">&nbsp;                    .collect(Collectors.toList());</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;            return new OrderResponseDTO(</b>
+<b class="nc">&nbsp;                    orderEntity.getId(),</b>
+<b class="nc">&nbsp;                    String.valueOf(orderEntity.getCustomerID()),</b>
+<b class="nc">&nbsp;                    orderEntity.getStatus(),</b>
+<b class="nc">&nbsp;                    orderEntity.getPaymentStatus(),</b>
+&nbsp;                    orderItemResponseDTOs,
+<b class="nc">&nbsp;                    orderEntity.getTotalOrderValue()</b>
+&nbsp;            );
+&nbsp;        }
+<b class="nc">&nbsp;        return null;  // Caso o pedido não seja encontrado</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderResponseDTO updatePayment(OrderResponseDTO order) {
+&nbsp;        // Assegure que o status está sendo passado como OrderStatusEnum
+<b class="nc">&nbsp;        OrderEntity orderEntity = gateway.updatePaymentStatus(order.getId(), OrderPaymentStatusEnum.valueOf(order.getPaymentStatus()));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (orderEntity != null) {</b>
+&nbsp;            // Mapeamento dos itens do pedido
+<b class="nc">&nbsp;            List&lt;OrderItemResponseDTO&gt; orderItemResponseDTOs = orderEntity.getOrderItems().stream()</b>
+<b class="nc">&nbsp;                    .map(item -&gt; {</b>
+<b class="nc">&nbsp;                        ProductDTO product = productClient.getProductById(item.getProductId());</b>
+<b class="nc">&nbsp;                        if (product != null) {</b>
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+<b class="nc">&nbsp;                                    product.getName(),</b>
+<b class="nc">&nbsp;                                    product.getCategory(),</b>
+<b class="nc">&nbsp;                                    product.getPrice(),</b>
+<b class="nc">&nbsp;                                    product.getDescription(),</b>
+<b class="nc">&nbsp;                                    product.getImagePath()</b>
+&nbsp;                            );
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            return new OrderItemResponseDTO(</b>
+<b class="nc">&nbsp;                                    item.getProductId(),</b>
+&nbsp;                                    &quot;Produto não encontrado&quot;,
+&nbsp;                                    &quot;N/A&quot;,
+<b class="nc">&nbsp;                                    0.0,</b>
+&nbsp;                                    &quot;Sem descrição&quot;,
+&nbsp;                                    &quot;Sem imagem&quot;
+&nbsp;                            );
+&nbsp;                        }
+&nbsp;                    })
+<b class="nc">&nbsp;                    .collect(Collectors.toList());</b>
+&nbsp;
+<b class="nc">&nbsp;            return new OrderResponseDTO(</b>
+<b class="nc">&nbsp;                    orderEntity.getId(),</b>
+<b class="nc">&nbsp;                    String.valueOf(orderEntity.getCustomerID()),</b>
+<b class="nc">&nbsp;                    orderEntity.getStatus(),</b>
+<b class="nc">&nbsp;                    orderEntity.getPaymentStatus(),</b>
+&nbsp;                    orderItemResponseDTOs,
+<b class="nc">&nbsp;                    orderEntity.getTotalOrderValue()</b>
+&nbsp;            );
+&nbsp;        }
+<b class="nc">&nbsp;        return null;  // Caso o pedido não seja encontrado</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-11-18 20:52</div>
+</div>
+</body>
+</html>
