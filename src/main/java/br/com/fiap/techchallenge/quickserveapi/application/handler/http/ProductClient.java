@@ -17,7 +17,4 @@ public interface ProductClient {
     @GetMapping("/products/{id}")
     ProductDTO getProductById(@PathVariable Long id); // Correção no PathVariable
 
-    // Método para buscar produtos relacionados a um pedido (exemplo, se precisar disso)
-    //@GetMapping("/products/by-order/{orderId}")
-    //List<ProductDTO> getProductsByOrderId(@PathVariable("orderId") Long orderId); // Correção no PathVariable
 }

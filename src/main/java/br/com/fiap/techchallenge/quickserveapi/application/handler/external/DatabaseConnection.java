@@ -24,14 +24,12 @@ public class DatabaseConnection implements dbconnection {
 
             // Estabelecer a conexão
             connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Conexão estabelecida com sucesso!");
 
         } catch (SQLException e) {
             System.out.println("Erro ao conectar ao banco de dados: " + e.getMessage());
         } catch (ClassNotFoundException e) {
             System.out.println("Driver JDBC não encontrado: " + e.getMessage());
         }
-
         return connection;
     }
 
@@ -87,36 +85,7 @@ public class DatabaseConnection implements dbconnection {
         query.append(") RETURNING ")
                 .append(idColumn)
                 .append(";");
-
-        // Exibe a query construída
-        System.out.println("Query construída: " + query.toString());
-
         return executarQuery(query.toString(), parametros, campos);
-    }
-
-    public List<Map<String, Object>> deletar(String tabela, String[] campos, ParametroBd[] parametros) {
-        // Validação básica
-        if (campos.length != parametros.length) {
-            throw new RuntimeException("Número de campos e parâmetros não corresponde");
-        }
-
-        // Construção da query
-        StringBuilder query = new StringBuilder("DELETE FROM ");
-        query.append(tabela).append(" WHERE ");
-
-        // Adiciona os campos na query
-        for (int i = 0; i < campos.length; i++) {
-            query.append(campos[i]).append(" = ?");
-            if (i < campos.length - 1) {
-                query.append(" AND ");
-            }
-        }
-        query.append(";");
-
-        // Exibe a query construída
-        System.out.println("Query construída: " + query.toString());
-
-        return executarQuery(query.toString(), parametros,campos);
     }
 
     public List<Map<String, Object>> Update(String tabela, String[] campos, ParametroBd[] parametros) {
@@ -142,14 +111,10 @@ public class DatabaseConnection implements dbconnection {
                 .append(idColumn)
                 .append("= ? ;");
 
-        // Exibe a query construída
-        System.out.println("Query construída: " + query.toString());
-
         return executarQuery(query.toString(), parametros,campos);
     }
 
     public List<Map<String, Object>> buscarPorParametros(String tabela, String[] campos, ParametroBd[] parametros) {
-        List<Map<String, Object>> resultados = new ArrayList<>();
         StringBuilder query = new StringBuilder("SELECT ");
 
         if (campos == null || campos.length == 0) {
@@ -174,22 +139,6 @@ public class DatabaseConnection implements dbconnection {
                 }
             }
         }
-
-        // Exibe a query construída
-        System.out.println("Query construída: " + query.toString());
-        // Log dos parâmetros
-        if (parametros != null && parametros.length > 0) {
-            System.out.println("PARÂMETROS:");
-            for (ParametroBd parametro : parametros) {
-                System.out.println("Campo: " + parametro.getCampo() + ", Valor: " + parametro.getValor());
-            }
-        } else {
-            System.out.println("Nenhum parâmetro fornecido.");
-        }
-
-        // Log dos campos
-        //System.out.println("CAMPOS: " + Arrays.toString(campos));
-
         return executarQuery(query.toString(), parametros, campos);
     }
 
@@ -212,8 +161,6 @@ public class DatabaseConnection implements dbconnection {
                     }
                 }
             }
-
-            //System.out.println("Query antes da execução: " + preparedStatement); // Verifica a query completa antes de executar
 
             if (query.trim().toUpperCase().startsWith("SELECT")) {
                 ResultSet resultSet = preparedStatement.executeQuery();
@@ -260,7 +207,6 @@ public class DatabaseConnection implements dbconnection {
     }
 
     public List<Map<String, Object>> buscarPorFiltros(String tabela, String[] campos, ParametroBd[] parametros, String[] filtros, Map<String, Integer> caseFiltros, String defaultOrder) {
-        List<Map<String, Object>> resultados = new ArrayList<>();
         StringBuilder query = new StringBuilder("SELECT ");
 
         // Adiciona os campos na query
@@ -308,10 +254,6 @@ public class DatabaseConnection implements dbconnection {
         } else if (defaultOrder != null && !defaultOrder.isEmpty()) {
             query.append(" ORDER BY ").append(defaultOrder);
         }
-
-        // Exibe a query construída
-        System.out.println("Query construída: " + query.toString());
-
         // Executa a query com todos os parâmetros e campos
         return executarQuery(query.toString(), parametros, campos);
     }

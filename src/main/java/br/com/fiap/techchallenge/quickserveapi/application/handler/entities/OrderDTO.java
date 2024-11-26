@@ -9,11 +9,6 @@ public class OrderDTO {
     public OrderDTO() {
     }
 
-    public OrderDTO(Long id, String name, Integer quantity) {
-        this.id = id;
-        this.quantity = quantity; // Inicializando a quantidade
-    }
-
     public Long getId() {
         return id;
     }

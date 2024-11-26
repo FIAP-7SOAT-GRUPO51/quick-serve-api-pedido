@@ -88,13 +88,6 @@ public class OrderPostEntity {
     public void setTotalOrderValue(Double totalOrderValue) {
         this.totalOrderValue = totalOrderValue;
     }
-
-    private Double calculateTotalOrderValue(Double price) {
-        return orderItems.stream()
-                .mapToDouble(item -> price * item.getQuantity())
-                .sum();
-    }
-
     @Override
     public String toString() {
         return "OrderPostEntity{" +

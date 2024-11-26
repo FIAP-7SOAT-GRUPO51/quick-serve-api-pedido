@@ -27,9 +27,7 @@ public abstract class BuildOrderHelper {
 
         order.setOrderDTOs(orderItems);
         order.setTotalOrderValue(250.0); // Exemplo de valor total
-        System.out.println(order);
 
         return order;
-
     }
 }

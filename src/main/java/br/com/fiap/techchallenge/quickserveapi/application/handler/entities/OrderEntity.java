@@ -23,24 +23,6 @@ public class OrderEntity {
         this.orderItems = orderItems;
         this.totalOrderValue = totalOrderValue;
     }
-
-    // Outros construtores...
-    public OrderEntity(Long id, Long customerID, OrderPaymentStatusEnum paymentStatus, List<OrderItem> orderItems, Double totalOrderValue) {
-        this.id = id;
-        this.customerID = customerID;
-        this.paymentStatus = paymentStatus;
-        this.orderItems = orderItems;
-        this.totalOrderValue = totalOrderValue;
-    }
-
-    public OrderEntity(Long customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<OrderItem> orderItems) {
-        this.customerID = customerID;
-        this.status = status;
-        this.paymentStatus = paymentStatus;
-        this.orderItems = orderItems;
-        this.totalOrderValue = calculateTotalOrderValue();
-    }
-
     public Long getId() {
         return this.id;
     }

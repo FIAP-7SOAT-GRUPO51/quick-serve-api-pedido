@@ -24,14 +24,7 @@ public class Gateway {
                 new ParametroBd("payment_status", orderEntity.getPaymentStatus().toString()),
                 new ParametroBd("total_order_value", orderEntity.getTotalOrderValue())
         };
-        System.out.println("Campos: " + Arrays.toString(campos));
-        System.out.println("Parâmetros:");
-        for (ParametroBd parametro : parametros) {
-            System.out.println("Nome: " + parametro.getCampo() + ", Valor: " + parametro.getValor());
-        }
-
         List<Map<String, Object>> result = database.Inserir("orders", campos, parametros);
-        System.out.println("Resultado da execução da query: " + result);
         return result != null && !result.isEmpty() ? (Long) result.get(0).get("id") : null;
     }
 
@@ -55,7 +48,6 @@ public class Gateway {
 
         // Buscando o pedido no banco de dados
         List<Map<String, Object>> result = database.buscarPorParametros("orders", campos, parametros);
-        System.out.println("Resultado da execução da query: " + result);
         // Verificando se algum pedido foi encontrado
         if (result == null || result.isEmpty()) {
             return null; // Retorna null se não encontrar nenhum pedido com o ID fornecido
@@ -63,12 +55,10 @@ public class Gateway {
 
         // Mapeando os dados da consulta para a entidade OrderEntity
         OrderEntity orderEntity = OrderAdapter.mapToOrderEntity(result.get(0)); // Mapeia a primeira linha da consulta
-        System.out.println("orderEntity da query: " + orderEntity.getStatus());
 
         // Agora, podemos carregar os itens do pedido (caso haja)
         List<OrderItem> orderItems = findOrderItemsByOrderId(orderId);
         orderEntity.setOrderItems(orderItems);
-        System.out.println("Resultado da setOrderItems: " + orderItems);
 
         return orderEntity; // Retorna o pedido com os itens preenchidos
     }
@@ -137,7 +127,6 @@ public class Gateway {
 
     public OrderEntity updatePaymentStatus(Long orderId, OrderPaymentStatusEnum status) {
 
-        System.out.println("status.toString(): " + status.toString());
         String[] campos = {"payment_status"};
         ParametroBd[] parametros = {
                 new ParametroBd("payment_status", status.toString()),
@@ -184,8 +173,6 @@ public class Gateway {
         // Realizando a consulta com filtros e ordenação
         List<Map<String, Object>> resultados = database.buscarPorFiltros("orders", campos, parametros, filtros, caseFiltros,  "order_id ASC");
 
-        // Mapeando os resultados para a entidade OrderEntity
-        System.out.println("RESULTADO: " + resultados);
         List<OrderEntity> orders = OrderAdapter.mapToOrderEntityList(resultados);
 
         // Retornando a lista de pedidos com os itens já carregados

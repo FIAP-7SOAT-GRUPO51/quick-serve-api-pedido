@@ -25,10 +25,8 @@ public class OrderCase {
         List<OrderDTO> orderDTOs = orderEntity.getOrderDTOs();
 
         OrderDTO produto = orderDTOs.get(0); // Aqui você pega o primeiro item da lista.
-
         // Obtém o produto correspondente através do cliente
         ProductDTO product = productClient.getProductById(produto.getId());
-
         // Calcula o valor do pedido com base no preço do produto e quantidade do pedido
         Double valorPedido = product.getPrice() * produto.getQuantity();
 
@@ -43,7 +41,6 @@ public class OrderCase {
         orderDTOs.forEach(item -> {
             gateway.saveOrderProduct(orderId, item.getId(), item.getQuantity());
         });
-
         return findById(orderId);
     }
 
@@ -67,22 +64,10 @@ public class OrderCase {
                                     product.getDescription(),
                                     product.getImagePath()
                             );
-                        } else {
-                            return new OrderItemResponseDTO(
-                                    item.getProductId(),
-                                    "Produto não encontrado",
-                                    "N/A",
-                                    0.0,
-                                    "Sem descrição",
-                                    "Sem imagem"
-                            );
                         }
+                        return null;
                     })
                     .collect(Collectors.toList());
-
-
-            // Certifique-se de que os valores estão corretos
-            System.out.println("orderItemResponseDTOs: " + orderItemResponseDTOs);
 
             // Retorno do DTO preenchido
             return new OrderResponseDTO(
@@ -125,16 +110,8 @@ public class OrderCase {
                                     product.getDescription(),
                                     product.getImagePath()
                             );
-                        } else {
-                            return new OrderItemResponseDTO(
-                                    item.getProductId(),
-                                    "Produto não encontrado",
-                                    "N/A",
-                                    0.0,
-                                    "Sem descrição",
-                                    "Sem imagem"
-                            );
                         }
+                        return null;
                     })
                     .collect(Collectors.toList());
 
@@ -179,16 +156,8 @@ public class OrderCase {
                                             product.getDescription(),
                                             product.getImagePath()
                                     );
-                                } else {
-                                    return new OrderItemResponseDTO(
-                                            item.getProductId(),
-                                            "Produto não encontrado",
-                                            "N/A",
-                                            0.0,
-                                            "Sem descrição",
-                                            "Sem imagem"
-                                    );
                                 }
+                                return null;
                             })
                             .collect(Collectors.toList());
                     // Retorna o DTO do pedido enriquecido
@@ -205,89 +174,85 @@ public class OrderCase {
     }
 
     public OrderResponseDTO updateStatus(OrderResponseDTO order) {
-        // Assegure que o status está sendo passado como OrderStatusEnum
+        // Tenta atualizar o status do pedido, pode retornar null se o pedido não for encontrado
         OrderEntity orderEntity = gateway.updateOrderStatus(order.getId(), OrderStatusEnum.valueOf(order.getStatus()));
 
-        if (orderEntity != null) {
-            // Mapeamento dos itens do pedido
-            List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
-                    .map(item -> {
-                        ProductDTO product = productClient.getProductById(item.getProductId());
-                        if (product != null) {
-                            return new OrderItemResponseDTO(
-                                    item.getProductId(),
-                                    product.getName(),
-                                    product.getCategory(),
-                                    product.getPrice(),
-                                    product.getDescription(),
-                                    product.getImagePath()
-                            );
-                        } else {
-                            return new OrderItemResponseDTO(
-                                    item.getProductId(),
-                                    "Produto não encontrado",
-                                    "N/A",
-                                    0.0,
-                                    "Sem descrição",
-                                    "Sem imagem"
-                            );
-                        }
-                    })
-                    .collect(Collectors.toList());
-
-
-            return new OrderResponseDTO(
-                    orderEntity.getId(),
-                    String.valueOf(orderEntity.getCustomerID()),
-                    orderEntity.getStatus(),
-                    orderEntity.getPaymentStatus(),
-                    orderItemResponseDTOs,
-                    orderEntity.getTotalOrderValue()
-            );
+        if (orderEntity == null) {
+            // Se o pedido não for encontrado, lança a exceção
+            throw new NotFoundException("Pedido não encontrado");
         }
-        return null;  // Caso o pedido não seja encontrado
+
+        // Caso o pedido seja encontrado, mapeia os itens do pedido
+        List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                .map(item -> {
+                    ProductDTO product = productClient.getProductById(item.getProductId());
+                    if (product != null) {
+                        return new OrderItemResponseDTO(
+                                item.getProductId(),
+                                product.getName(),
+                                product.getCategory(),
+                                product.getPrice(),
+                                product.getDescription(),
+                                product.getImagePath()
+                        );
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList());
+
+        return new OrderResponseDTO(
+                orderEntity.getId(),
+                String.valueOf(orderEntity.getCustomerID()),
+                orderEntity.getStatus(),
+                orderEntity.getPaymentStatus(),
+                orderItemResponseDTOs,
+                orderEntity.getTotalOrderValue()
+        );
     }
 
     public OrderResponseDTO updatePayment(OrderResponseDTO order) {
-        // Assegure que o status está sendo passado como OrderStatusEnum
+        // Tenta atualizar o status de pagamento do pedido, pode retornar null se o pedido não for encontrado
         OrderEntity orderEntity = gateway.updatePaymentStatus(order.getId(), OrderPaymentStatusEnum.valueOf(order.getPaymentStatus()));
 
-        if (orderEntity != null) {
-            // Mapeamento dos itens do pedido
-            List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
-                    .map(item -> {
-                        ProductDTO product = productClient.getProductById(item.getProductId());
-                        if (product != null) {
-                            return new OrderItemResponseDTO(
-                                    item.getProductId(),
-                                    product.getName(),
-                                    product.getCategory(),
-                                    product.getPrice(),
-                                    product.getDescription(),
-                                    product.getImagePath()
-                            );
-                        } else {
-                            return new OrderItemResponseDTO(
-                                    item.getProductId(),
-                                    "Produto não encontrado",
-                                    "N/A",
-                                    0.0,
-                                    "Sem descrição",
-                                    "Sem imagem"
-                            );
-                        }
-                    })
-                    .collect(Collectors.toList());
-
-            return new OrderResponseDTO(
-                    orderEntity.getId(),
-                    String.valueOf(orderEntity.getCustomerID()),
-                    orderEntity.getStatus(),
-                    orderEntity.getPaymentStatus(),
-                    orderItemResponseDTOs,
-                    orderEntity.getTotalOrderValue()
-            );
+        if (orderEntity == null) {
+            // Se o pedido não for encontrado, lança a exceção
+            throw new NotFoundException("Pedido não encontrado");
         }
-        return null;  // Caso o pedido não seja encontrado
+
+        // Caso o pedido seja encontrado, mapeia os itens do pedido
+        List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                .map(item -> {
+                    ProductDTO product = productClient.getProductById(item.getProductId());
+                    if (product != null) {
+                        return new OrderItemResponseDTO(
+                                item.getProductId(),
+                                product.getName(),
+                                product.getCategory(),
+                                product.getPrice(),
+                                product.getDescription(),
+                                product.getImagePath()
+                        );
+                    } else {
+                        return new OrderItemResponseDTO(
+                                item.getProductId(),
+                                "Produto não encontrado",
+                                "N/A",
+                                0.0,
+                                "Sem descrição",
+                                "Sem imagem"
+                        );
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return new OrderResponseDTO(
+                orderEntity.getId(),
+                String.valueOf(orderEntity.getCustomerID()),
+                orderEntity.getStatus(),
+                orderEntity.getPaymentStatus(),
+                orderItemResponseDTOs,
+                orderEntity.getTotalOrderValue()
+        );
     }
+
 }

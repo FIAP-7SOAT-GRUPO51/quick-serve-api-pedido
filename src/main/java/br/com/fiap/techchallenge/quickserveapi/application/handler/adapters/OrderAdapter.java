@@ -10,59 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Component // Marca a classe como um componente do Spring, permitindo injeção de dependências
+@Component
 public class OrderAdapter {
 
     @Autowired
     private ProductClient productClient; // Injeção de dependência do ProductClient
 
-    // Método original, sem alterações
-/*    public static OrderEntity mapSingleToOrderEntity(Map<String, Object> row) {
-        if (row == null) {
-            throw new RuntimeException("Ordem não encontrada");
-        }
-
-        // Imprimir os dados da linha para inspeção
-        System.out.println("Dados da linha recebida: " + row);
-        System.out.println("customer_id: " + row.get("order_id"));
-
-        // Conversão dos valores de 'status' e 'payment_status' para os enums respectivos
-        OrderStatusEnum status = OrderStatusEnum.valueOf((String) row.get("status"));
-        OrderPaymentStatusEnum paymentStatus = OrderPaymentStatusEnum.valueOf((String) row.get("payment_status"));
-
-        // Conversão de 'order_id' diretamente para Long
-        Long orderId = (Long) row.get("order_id");
-
-        Long customerId = (Long) row.get("customer_id");
-
-        // Aqui, 'orderItems' será uma lista de OrderItem, por enquanto, colocamos null
-        List<OrderItem> orderItems = null;
-
-        // Criar a OrderEntity com os valores mapeados
-        OrderEntity orderEntity = new OrderEntity(
-                orderId,
-                customerId,
-                status,
-                paymentStatus,
-                orderItems,  // Lista de itens do pedido (atualmente null)
-                (Double) row.get("total_order_value")
-        );
-
-        // Imprimir a entidade mapeada para verificação
-        System.out.println("Entidade mapeada: " + orderEntity);
-
-        return orderEntity;
-    }
-*/
-
     public static OrderEntity mapSingleToOrderEntity(Map<String, Object> row) {
         if (row == null) {
             throw new RuntimeException("Ordem não encontrada");
         }
-
-        // Imprimir os dados da linha para inspeção
-        System.out.println("Dados da linha recebida: " + row);
-        System.out.println("order_id: " + row.get("order_id"));
 
         // Conversão dos valores de 'status' e 'payment_status' para os enums respectivos
         OrderStatusEnum status = OrderStatusEnum.valueOf((String) row.get("status"));
@@ -85,14 +42,11 @@ public class OrderAdapter {
                 (Double) row.get("total_order_value")
         );
 
-        // Imprimir a entidade mapeada para verificação
-        System.out.println("Entidade mapeada: " + orderEntity);
-
         return orderEntity;
     }
 
     // Método de parse para garantir que a conversão de tipo seja feita de forma segura
-    private static Long parseLong(Object value) {
+    public static Long parseLong(Object value) {
         if (value instanceof Number) {
             return ((Number) value).longValue();  // Converte valores numéricos diretamente para Long
         }
@@ -101,31 +55,6 @@ public class OrderAdapter {
         } catch (NumberFormatException e) {
             return null;  // Retorna null se não puder converter
         }
-    }
-
-
-    // Método de conversão de ProductDTO para OrderItem
-    private List<OrderItem> convertToOrderItems(List<ProductDTO> productDTOList) {
-        List<OrderItem> orderItems = new ArrayList<>();
-
-        for (ProductDTO productDTO : productDTOList) {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setProductId(productDTO.getId());
-            orderItem.setQuantity(productDTO.getQuantity());
-
-            orderItems.add(orderItem);
-        }
-
-        return orderItems;
-    }
-
-    // Métodos de mapeamento para listas
-    public static OrderEntity mapToOrderEntityEntity(List<Map<String, Object>> results) {
-        if (results == null || results.isEmpty()) {
-            throw new RuntimeException("Order não encontrada");
-        }
-        Map<String, Object> row = results.get(0);
-        return new OrderAdapter().mapSingleToOrderEntity(row); // Usando instância para chamar o método
     }
 
     public static List<OrderEntity> mapToOrderEntityList(List<Map<String, Object>> results) {
@@ -191,8 +120,4 @@ public class OrderAdapter {
 
         return item;
     }
-
-
-
-
 }

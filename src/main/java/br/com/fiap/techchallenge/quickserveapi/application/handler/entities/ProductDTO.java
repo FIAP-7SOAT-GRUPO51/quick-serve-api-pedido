@@ -15,16 +15,6 @@ public class ProductDTO {
     public ProductDTO() {
     }
 
-    public ProductDTO(Long id, String name, Double price, Integer quantity, String category,String description,String imagePath) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.quantity = quantity; // Inicializando a quantidade
-        this.category = category;
-        this.description = description;
-        this.imagePath = imagePath;
-    }
-
     public Long getId() {
         return id;
     }

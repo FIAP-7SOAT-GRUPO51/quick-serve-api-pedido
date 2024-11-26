@@ -32,10 +32,6 @@ public class DefinicaoPassos {
         response = given().contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(orderRequest)
                 .when().post(ENDPOINT_API_PEDIDOS);
-
-        // Log the response body to see its content
-        System.out.println("Response Body: " + response.getBody().asString());
-
         return response.then().extract().as(OrderResponseDTO.class);
     }
     @Então("o pedido é registrado com sucesso")

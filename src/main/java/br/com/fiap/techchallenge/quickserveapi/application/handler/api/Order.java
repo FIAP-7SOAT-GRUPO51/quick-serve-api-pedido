@@ -53,10 +53,10 @@ public class Order {
             description = "Este endpoint é utilizado para encontrar o status do pagamento do Pedido"
     )
     public Object checkPaymentStatus(@PathVariable Long id) {
-        try{
+        try {
             var pedido = this.orderController.checkPaymentStatus(id);
             return new ResponseEntity<>(pedido, HttpStatus.ACCEPTED).getBody();
-        }catch (NotFoundException notFoundException){
+        } catch (NotFoundException notFoundException){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
         }
     }
@@ -72,8 +72,6 @@ public class Order {
             return new ResponseEntity<>(orders, HttpStatus.OK).getBody();
         } catch (NotFoundException notFoundException) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundException.getMessage());
-        } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + exception.getMessage());
         }
     }
 
@@ -89,14 +87,21 @@ public class Order {
         return orderController.findAllSorted(sortOrder);
     }
 
-
     @PutMapping(value = "/{id}/{status}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Atualiza o status de um pedido",
             description = "Este endpoint atualiza o status de um pedido com base no ID fornecido e no novo status."
     )
-    public ResponseEntity<Object> updateOrderEntityStatus(@PathVariable Long id, @PathVariable OrderStatusEnum status) {
+    public ResponseEntity<Object> updateOrderEntityStatus(@PathVariable Long id, @PathVariable String status) {
         try {
+            // Verifica se o status é válido
+            if (!OrderStatusEnum.isValid(status)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Status inválido");
+            }
+
+            // Converte o status para o enum correspondente
+            OrderStatusEnum orderStatus = OrderStatusEnum.valueOf(status.toUpperCase());
+
             // Busca o pedido pelo ID
             OrderResponseDTO order = this.orderController.findById(id);
 
@@ -104,14 +109,16 @@ public class Order {
             if (order == null) {
                 throw new NotFoundException("Pedido não encontrado");
             }
+
             // Atualiza o status do pedido
-            order.setStatus(status.toString());
+            order.setStatus(orderStatus.name());
 
             // Chama o método para atualizar o status do pedido no controlador
             this.orderController.updateStatus(order);
 
             // Retorna a resposta com o status HTTP 202 Accepted
             return new ResponseEntity<>(order, HttpStatus.ACCEPTED);
+
         } catch (NotFoundException notFoundException) {
             // Caso o pedido não seja encontrado, retorna o erro com o status HTTP 400 Bad Request
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
@@ -147,9 +154,6 @@ public class Order {
         } catch (NotFoundException notFoundException) {
             // Caso o pedido não seja encontrado, retorna o erro com o status HTTP 400 Bad Request
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notFoundException.getMessage());
-        } catch (Exception e) {
-            // Caso ocorra outro erro, retorna o erro genérico com o status HTTP 500 Internal Server Error
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar o pagamento do pedido: " + e.getMessage());
         }
     }
 }
