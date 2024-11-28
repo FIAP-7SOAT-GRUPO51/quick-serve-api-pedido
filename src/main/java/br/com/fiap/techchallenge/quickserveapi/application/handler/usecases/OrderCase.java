@@ -1,156 +1,258 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.usecases;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.adapters.OrderAdapter;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderEntity;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPaymentStatusEnum;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.*;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.NotFoundException;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.gateway.Gateway;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.interfaces.ParametroBd;
+import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
+
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class OrderCase {
 
     private final Gateway gateway;
+    private final ProductClient productClient;
 
-    public OrderCase(Gateway gateway) {
+    public OrderCase(Gateway gateway,ProductClient productClient) {
         this.gateway = gateway;
+        this.productClient = productClient;
     }
 
-    public OrderEntity save(OrderEntity orderEntity) {
-        ParametroBd[] parametros = new ParametroBd[]{
-                new ParametroBd("status", orderEntity.getStatus().toString()),
-                new ParametroBd("customer_id", orderEntity.getCustomerID()),
-                new ParametroBd("payment_status", orderEntity.getPaymentStatus().toString()),
-                new ParametroBd("total_order_value", orderEntity.getTotalOrderValue())
-        };
-        // Chamada ao método Inserir do database com os parâmetros necessários
-        String[] campos = {"status", "customer_id","payment_status", "total_order_value", };
-        String tabela = "orders";
-        List<Map<String, Object>> result = gateway.insert(tabela, campos, parametros);
-        // Configurar o ID no OrderEntity
-        if (result != null && !result.isEmpty()) {
-            Map<String, Object> row = result.get(0);
-            if (row.containsKey("id")) {
-                orderEntity.setId(Long.parseLong(row.get("id").toString()));
-            }
+    public OrderResponseDTO save(OrderPostEntity orderEntity) {
+        // Pega a lista de OrderDTOs, não um único OrderDTO
+        List<OrderDTO> orderDTOs = orderEntity.getOrderDTOs();
+
+        OrderDTO produto = orderDTOs.get(0); // Aqui você pega o primeiro item da lista.
+        // Obtém o produto correspondente através do cliente
+        ProductDTO product = productClient.getProductById(produto.getId());
+        // Calcula o valor do pedido com base no preço do produto e quantidade do pedido
+        Double valorPedido = product.getPrice() * produto.getQuantity();
+
+        // Define o valor total do pedido no orderEntity
+        orderEntity.setTotalOrderValue(valorPedido);
+
+        // Salva o pedido e obtém o ID do pedido gerado
+        Long orderId = gateway.saveOrder(orderEntity);
+        orderEntity.setId(orderId);
+
+        // Salva cada item do pedido na base de dados
+        orderDTOs.forEach(item -> {
+            gateway.saveOrderProduct(orderId, item.getId(), item.getQuantity());
+        });
+        return findById(orderId);
+    }
+
+    public OrderResponseDTO findById(Long id) {
+        // Recupera o pedido do gateway
+        OrderEntity orderEntity = gateway.findOrderById(id);
+        if (orderEntity == null) {
+            // Lança a exceção NotFoundException
+            throw new NotFoundException("Pedido não encontrado");
+        }
+            // Criação do DTO de resposta
+            List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                    .map(item -> {
+                        ProductDTO product = productClient.getProductById(item.getProductId());
+                        if (product != null) {
+                            return new OrderItemResponseDTO(
+                                    item.getProductId(),
+                                    product.getName(),
+                                    product.getCategory(),
+                                    product.getPrice(),
+                                    product.getDescription(),
+                                    product.getImagePath()
+                            );
+                        }
+                        return null;
+                    })
+                    .collect(Collectors.toList());
+
+            // Retorno do DTO preenchido
+            return new OrderResponseDTO(
+                    orderEntity.getId(),
+                    String.valueOf(orderEntity.getCustomerID()),
+                    orderEntity.getStatus(),
+                    orderEntity.getPaymentStatus(),
+                    orderItemResponseDTOs,
+                    orderEntity.getTotalOrderValue()
+            );
+    }
+
+    public PaymentStatusDTO checkPaymentStatus(Long id) {
+        // Recupera o pedido do gateway
+        PaymentStatusDTO pagamento = gateway.findPaymentStatus(id);
+
+        if (pagamento == null) {
+            throw new NotFoundException("Pedido não encontrado");
+        }
+        return pagamento;
+    }
+
+    public List<OrderResponseDTO> findAll() {
+        // Recupera todos os pedidos
+        List<OrderEntity> orderEntities = gateway.findAllOrders();
+        List<OrderResponseDTO> orderResponseDTOs = new ArrayList<>();
+
+        for (OrderEntity orderEntity : orderEntities) {
+            // Para cada pedido, cria os itens de resposta com os produtos
+            List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                    .map(item -> {
+                        // Consultando o produto para cada item do pedido
+                        ProductDTO product = productClient.getProductById(item.getProductId());
+                        if (product != null) {
+                            return new OrderItemResponseDTO(
+                                    item.getProductId(),
+                                    product.getName(),
+                                    product.getCategory(),
+                                    product.getPrice(),
+                                    product.getDescription(),
+                                    product.getImagePath()
+                            );
+                        }
+                        return null;
+                    })
+                    .collect(Collectors.toList());
+
+            // Adiciona o DTO do pedido à lista de respostas
+            orderResponseDTOs.add(new OrderResponseDTO(
+                    orderEntity.getId(),
+                    String.valueOf(orderEntity.getCustomerID()),
+                    orderEntity.getStatus(),
+                    orderEntity.getPaymentStatus(),
+                    orderItemResponseDTOs,
+                    orderEntity.getTotalOrderValue()
+            ));
         }
 
-        // insert da tabela orderproduct
-        HashSet<Long> distinctProductId = new HashSet<Long>();
-        orderEntity.getOrderItems().forEach(product -> {
-            distinctProductId.add(product.getId());
-        });
-
-        distinctProductId.forEach(product -> {
-            ParametroBd[] parametrosOrderProduct = new ParametroBd[]{
-
-                    new ParametroBd("order_id", orderEntity.getId()),
-                    new ParametroBd("product_id", product),
-                    new ParametroBd("product_quantity", orderEntity.getOrderItems().stream().filter(p -> p.getId().equals(product)).count())
-            };
-            // Chamada ao método Inserir do database com os parâmetros necessários
-            String[] camposOrderProduct = {"order_id", "product_id", "product_quantity"};
-            String tabelaOrderProduct = "order_products";
-            gateway.insert(tabelaOrderProduct, camposOrderProduct, parametrosOrderProduct);
-
-        });
-
-        return orderEntity;
+        return orderResponseDTOs; // Retorna a lista de pedidos com os produtos
     }
 
-    public OrderEntity findById(Long id) {
-        ParametroBd[] parametros = {new ParametroBd("order_id", id)};
-        List<Map<String, Object>> resultados = gateway.find("orders", new String[]{"order_id", "status", "customer_id", "total_order_value", "payment_status"}, parametros);
-        OrderEntity order = OrderAdapter.mapToOrderEntityEntity(resultados);
-        ProductCase productCase = new ProductCase(this.gateway);
-        order.setOrderItems(productCase.findByOrder(order));
-        return order;
-    }
-
-    public OrderEntity updateStatus(OrderEntity order) {
-        ParametroBd[] parametros = {
-                new ParametroBd("status", order.getStatus().toString()),
-                new ParametroBd("order_id", order.getId()),
-        };
-
-        String[] campos = {"status"};
-
-        String tabela = "orders";
-        List<Map<String, Object>> mensagem = gateway.update(tabela, campos, parametros);
-
-        System.out.println(mensagem);
-        return order;
-    }
-
-    public List<OrderEntity> findAll() {
-        ParametroBd[] parametros = {};
-        List<Map<String, Object>> resultados = gateway.find("orders", new String[]{"order_id", "status", "customer_id", "total_order_value", "payment_status"}, parametros);
-
-        ProductCase productCase = new ProductCase(this.gateway);
-
-        List<OrderEntity> orders = OrderAdapter.mapToOrderEntityList(resultados);
-        orders.forEach(item -> {
-            item.setOrderItems(productCase.findByOrder(item));
-        });
-
-        // Utiliza o adapter para mapear os resultados para ProductEntity
-        return orders;
-    }
-
-    public String checkPaymentStatus(Long id){
-        ParametroBd[] parametros = { new ParametroBd("order_id", id) };
-        String resultados = gateway.find("orders", new String[]{"payment_status"}, parametros).toString();
-
-        return OrderAdapter.mapToJson(resultados);
-    }
-
-    public List<OrderEntity> listByFilters() {
-        String tabela = "orders";
-        String[] campos = {"order_id", "status", "customer_id", "total_order_value", "payment_status"};
-        ParametroBd[] parametros = {new ParametroBd("status", "FINALIZADO")}; // Exemplo de parâmetro para cláusula WHERE
-        String[] filtros = {}; // Nenhum filtro adicional para ordenação padrão
-
-        // Mapeamento do case para a ordenação
+    public List<OrderResponseDTO> listByFiltersWithSorting(String sortOrder) {
+        // Mapeamento de caso para a ordenação
         Map<String, Integer> caseFiltros = new HashMap<>();
         caseFiltros.put("PRONTO", 1);
         caseFiltros.put("EM_PREPARACAO", 2);
         caseFiltros.put("RECEBIDO", 3);
 
-        List<Map<String, Object>> resultados = gateway.findByFilters(tabela, campos, parametros, filtros, caseFiltros, "order_id DESC");
+        // Chama o Gateway para buscar os pedidos com a ordenação e filtros
+        List<OrderEntity> orderEntities = gateway.findOrdersWithSorting(caseFiltros, sortOrder);
 
-        ProductCase productCase = new ProductCase(this.gateway);
-
-        List<OrderEntity> orders = OrderAdapter.mapToOrderEntityList(resultados);
-        orders.forEach(item -> {
-            item.setOrderItems(productCase.findByOrder(item));
-        });
-
-        // Utiliza o adapter para mapear os resultados para ProductEntity
-        return orders;
+        // Mapeia os resultados para DTOs de pedido e enriquece com os dados dos produtos
+        return orderEntities.stream()
+                .map(orderEntity -> {
+                    // Enriquecer os itens do pedido com os dados dos produtos
+                    List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                            .map(item -> {
+                                // Enriquecer os dados de produto usando o client
+                                ProductDTO product = productClient.getProductById(item.getProductId());
+                                if (product != null) {
+                                    return new OrderItemResponseDTO(
+                                            item.getProductId(),
+                                            product.getName(),
+                                            product.getCategory(),
+                                            product.getPrice(),
+                                            product.getDescription(),
+                                            product.getImagePath()
+                                    );
+                                }
+                                return null;
+                            })
+                            .collect(Collectors.toList());
+                    // Retorna o DTO do pedido enriquecido
+                    return new OrderResponseDTO(
+                            orderEntity.getId(),
+                            String.valueOf(orderEntity.getCustomerID()),
+                            orderEntity.getStatus(),
+                            orderEntity.getPaymentStatus(),
+                            orderItemResponseDTOs,
+                            orderEntity.getTotalOrderValue()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
-    public OrderEntity paymentApprover(Long id, OrderPaymentStatusEnum status) {
-        String tabela = "orders";
-        ParametroBd[] parametrosFind = { new ParametroBd("order_id", id) };
-        String[] camposSelecionados = { "order_id", "status", "customer_id", "total_order_value", "payment_status" };
-        List<Map<String, Object>> ordemEncontrada = gateway.find(tabela, camposSelecionados, parametrosFind);
+    public OrderResponseDTO updateStatus(OrderResponseDTO order) {
+        // Tenta atualizar o status do pedido, pode retornar null se o pedido não for encontrado
+        OrderEntity orderEntity = gateway.updateOrderStatus(order.getId(), OrderStatusEnum.valueOf(order.getStatus()));
 
-        if (ordemEncontrada != null && !ordemEncontrada.isEmpty()) {
-            // Parâmetros para atualização
-            ParametroBd[] parametrosUpdate = {
-                    new ParametroBd("payment_status", status.name()),
-                    new ParametroBd("order_id", id),
-            };
-
-            String[] camposParaAtualizar = { "payment_status" };
-            gateway.update(tabela, camposParaAtualizar, parametrosUpdate);
-
-            return findById(id);
+        if (orderEntity == null) {
+            // Se o pedido não for encontrado, lança a exceção
+            throw new NotFoundException("Pedido não encontrado");
         }
 
-        return OrderAdapter.mapToOrderEntityEntity(ordemEncontrada);
+        // Caso o pedido seja encontrado, mapeia os itens do pedido
+        List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                .map(item -> {
+                    ProductDTO product = productClient.getProductById(item.getProductId());
+                    if (product != null) {
+                        return new OrderItemResponseDTO(
+                                item.getProductId(),
+                                product.getName(),
+                                product.getCategory(),
+                                product.getPrice(),
+                                product.getDescription(),
+                                product.getImagePath()
+                        );
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList());
+
+        return new OrderResponseDTO(
+                orderEntity.getId(),
+                String.valueOf(orderEntity.getCustomerID()),
+                orderEntity.getStatus(),
+                orderEntity.getPaymentStatus(),
+                orderItemResponseDTOs,
+                orderEntity.getTotalOrderValue()
+        );
     }
+
+    public OrderResponseDTO updatePayment(OrderResponseDTO order) {
+        // Tenta atualizar o status de pagamento do pedido, pode retornar null se o pedido não for encontrado
+        OrderEntity orderEntity = gateway.updatePaymentStatus(order.getId(), OrderPaymentStatusEnum.valueOf(order.getPaymentStatus()));
+
+        if (orderEntity == null) {
+            // Se o pedido não for encontrado, lança a exceção
+            throw new NotFoundException("Pedido não encontrado");
+        }
+
+        // Caso o pedido seja encontrado, mapeia os itens do pedido
+        List<OrderItemResponseDTO> orderItemResponseDTOs = orderEntity.getOrderItems().stream()
+                .map(item -> {
+                    ProductDTO product = productClient.getProductById(item.getProductId());
+                    if (product != null) {
+                        return new OrderItemResponseDTO(
+                                item.getProductId(),
+                                product.getName(),
+                                product.getCategory(),
+                                product.getPrice(),
+                                product.getDescription(),
+                                product.getImagePath()
+                        );
+                    } else {
+                        return new OrderItemResponseDTO(
+                                item.getProductId(),
+                                "Produto não encontrado",
+                                "N/A",
+                                0.0,
+                                "Sem descrição",
+                                "Sem imagem"
+                        );
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return new OrderResponseDTO(
+                orderEntity.getId(),
+                String.valueOf(orderEntity.getCustomerID()),
+                orderEntity.getStatus(),
+                orderEntity.getPaymentStatus(),
+                orderItemResponseDTOs,
+                orderEntity.getTotalOrderValue()
+        );
+    }
+
 }

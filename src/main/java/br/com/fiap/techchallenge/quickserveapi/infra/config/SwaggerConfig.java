@@ -10,7 +10,7 @@ public class SwaggerConfig{
 
     @Bean
     public OpenAPI customOpenAPI() {
-        return new OpenAPI().info(new Info().title("Quick Serve API - Tech Challange - 7SOAT - Grupo 51 ")
-                        .description("Bem-vindo a documentação das APIs do Quick Serve"));
+        return new OpenAPI().info(new Info().title("Quick Serve API para MicroServiço Order - Tech Challange - 7SOAT - Grupo 51 ")
+                        .description("Bem-vindo a documentação das APIs do Quick Serve MicroServiço Order"));
     }
 }
