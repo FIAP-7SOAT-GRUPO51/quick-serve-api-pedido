@@ -13,6 +13,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 
 import static br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPaymentStatusEnum.APROVADO;
@@ -22,10 +23,15 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.doThrow;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase
-@ActiveProfiles("test")
-@Sql("/data.sql")
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+            "spring.datasource.url=jdbc:h2:mem:testdb",
+            "spring.datasource.username=root",
+            "spring.datasource.password=toor",
+            "spring.flyway.locations=classpath:db/migration/h2"
+        }
+)
 public class OrderApiIT {
 
     @LocalServerPort
@@ -74,7 +80,6 @@ public class OrderApiIT {
     @Nested
     class BuscarPedido {
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void devePermitirBuscarPedido() {
             var id = "1";
             RestAssured.when().get(urlOrder + "/{id}", id)
@@ -83,7 +88,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoBuscarPedido_IdNaoExiste()  {
             var id ="4555";
             given()
@@ -97,7 +101,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void devePermitirBuscarStatusPagamento() {
             var id = "1";
             RestAssured.when().get(urlOrder + "/payment/{id}", id)
@@ -106,7 +109,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoBuscarStatusPagamento_IdNaoExiste()  {
             var id = "4555"; // ID inexistente no banco de dados
 
@@ -124,10 +126,9 @@ public class OrderApiIT {
     @Nested
     class AlterarPedido {
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void devePermitirAlterarStatusPedido()  {
             // Definindo o ID e status do pedido
-            var id = "1";
+            var id = 1;
             var pedido = BuildOrderResponseDTO.buildOrderDTO();
 
             pedido.setId(Long.valueOf(id));
@@ -144,7 +145,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoAlterarStatusPedido_IdNaoExiste()  {
             var id ="4555";
             given()
@@ -157,7 +157,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoStatusInvalidoForPassado() {
             var id = "4555";
             var statusInvalido = "INVALIDO";
@@ -172,7 +171,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoAlterarStatusPedido_PayloadXML(){
             String xmlPayload = "<AlteracaoStatusPedido><id>123456</id><status>EM_PREPARACAO</status></AlteracaoStatusPedido>";
 
@@ -189,7 +187,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void devePermitirAlterarPagamentoPedido()  {
             // Definindo o ID e status do pedido
             var id = "1";
@@ -209,7 +206,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoAlterarPagamentoPedido_IdNaoExiste()  {
             var id ="4555";
             given()
@@ -222,7 +218,6 @@ public class OrderApiIT {
         }
 
         @Test
-        @Sql(scripts = {"/clean.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
         void deveGerarExcecao_QuandoAlterarPagamentoPedido_PayloadXML(){
             String xmlPayload = "<AlteracaoPagamentoPedido><id>123456</id><status>APROVADO</status></AlteracaoPagamentoPedido>";
 

@@ -308,7 +308,7 @@ public class OrderApiTest {
             orderResponseDTOList.add(BuildOrderResponseDTO.buildOrderDTO());
 
             // Mock da resposta para o método listByFiltersWithSorting no controlador
-            when(orderController.findAllSorted("order_id ASC")).thenReturn(orderResponseDTOList);  // Ordena por "PRONTO"
+            when(orderController.findAllSorted("id ASC")).thenReturn(orderResponseDTOList);  // Ordena por "PRONTO"
 
             // Realiza a requisição GET para listar pedidos com ordenação (passando o parâmetro "PRONTO" como exemplo)
             mockMvc.perform(get(urlOrder + "/list"))

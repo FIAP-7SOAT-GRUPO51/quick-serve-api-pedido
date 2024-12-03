@@ -11,7 +11,7 @@ public abstract class BuildOrderHelper {
         // Aqui você pode passar valores fixos ou parâmetros para customizar os valores
         OrderPostEntity order = new OrderPostEntity();
 
-        order.setId(1L);
+        order.setId(3L);
         order.setCustomerID(123L);
         order.setStatus(OrderStatusEnum.RECEBIDO);
 

@@ -10,11 +10,8 @@ import br.com.fiap.techchallenge.quickserveapi.utils.BuildOrderResponseDTO;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
 
@@ -27,11 +24,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
-@AutoConfigureTestDatabase
-@Transactional
-@ActiveProfiles("test")
-@Sql("/data.sql")
+
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "spring.datasource.url=jdbc:h2:mem:testdb",
+                "spring.datasource.username=root",
+                "spring.datasource.password=toor",
+                "spring.flyway.locations=classpath:db/migration/h2"
+        }
+)
 public class OrderServiceIT {
 
     @Autowired
@@ -55,21 +57,21 @@ public class OrderServiceIT {
     class BuscarPedido {
         @Test
         void devePermitirBuscarPedido() {
-            var id = "2";
+            var id = 1;
             var resultadoObtido = orderCase.findById(Long.valueOf(id));
 
             assertThat(resultadoObtido).isNotNull().isInstanceOf(OrderResponseDTO.class);
-            assertThat(resultadoObtido.getStatus()).isNotNull().isEqualTo("RECEBIDO");
-            assertThat(resultadoObtido.getPaymentStatus()).isNotNull().isEqualTo("PENDENTE");
+            assertThat(resultadoObtido.getStatus()).isNotNull().isEqualTo("EM_PREPARACAO");
+            assertThat(resultadoObtido.getPaymentStatus()).isNotNull().isEqualTo("APROVADO");
         }
 
         @Test
         void devePermitirBuscarStatusPagamento() {
-            var id = "2";
+            var id = 1;
             var resultadoObtido = orderCase.checkPaymentStatus(Long.valueOf(id));
             assertThat(resultadoObtido).isNotNull().isInstanceOf(PaymentStatusDTO.class);
-            assertThat(resultadoObtido.getOrderId()).isNotNull().isEqualTo(2L);
-            assertThat(resultadoObtido.getPaymentStatus()).isNotNull().isEqualTo("PENDENTE");
+            assertThat(resultadoObtido.getOrderId()).isNotNull().isEqualTo(1L);
+            assertThat(resultadoObtido.getPaymentStatus()).isNotNull().isEqualTo("APROVADO");
         }
     }
 
@@ -77,10 +79,10 @@ public class OrderServiceIT {
     class AlterarPedido{
         @Test
         void devePermitirAlterarStatusPedido(){
-            var id = "1";
+            var id = 1L;
             var pedido = BuildOrderResponseDTO.buildOrderDTO();
 
-            pedido.setId(Long.valueOf(id));
+            pedido.setId(id);
             pedido.setStatus(String.valueOf(EM_PREPARACAO));
 
             var resultadoObtido = orderCase.updateStatus(pedido);
@@ -118,11 +120,11 @@ public class OrderServiceIT {
         @Test
         void devePermitirListarPedidosComOrdenacao() {
 
-            String orderList = "order_id ASC";
+            String orderList = "id ASC";
 
             List<OrderResponseDTO> orderResponseDTOList = orderCase.listByFiltersWithSorting(orderList);
 
-            assertNotNull(orderResponseDTOList, "Pedido não encontrado");
+            assertNotNull(orderResponseDTOList, "Order não encontrado");
         }
     }
 

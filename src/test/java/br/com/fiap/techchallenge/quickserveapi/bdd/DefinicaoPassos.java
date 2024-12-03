@@ -1,7 +1,5 @@
 package br.com.fiap.techchallenge.quickserveapi.bdd;
 
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderEntity;
-import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPostEntity;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderResponseDTO;
 import br.com.fiap.techchallenge.quickserveapi.utils.BuildOrderHelper;
 import io.cucumber.java.pt.Dado;

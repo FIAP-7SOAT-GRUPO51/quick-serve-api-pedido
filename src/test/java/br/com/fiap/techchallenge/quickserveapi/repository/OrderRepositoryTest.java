@@ -99,10 +99,10 @@ public class OrderRepositoryTest {
                 new OrderResponseDTO(2L, "124", EM_PREPARACAO, PENDENTE, new ArrayList<>(), 200.0)
         );
 
-        when(orderController.findAllSorted("order_id ASC")).thenReturn(pedidos);
+        when(orderController.findAllSorted("id ASC")).thenReturn(pedidos);
 
         // Chama o método a ser testado
-        List<OrderResponseDTO> resultado = orderController.findAllSorted("order_id ASC");
+        List<OrderResponseDTO> resultado = orderController.findAllSorted("id ASC");
 
         // Validações
         assertNotNull(resultado, "O resultado não deve ser nulo");
@@ -111,7 +111,7 @@ public class OrderRepositoryTest {
         assertEquals(pedidos.get(1).getId(), resultado.get(1).getId());
 
         // Verifica se o método mockado foi chamado
-        verify(orderController, times(1)).findAllSorted("order_id ASC");
+        verify(orderController, times(1)).findAllSorted("id ASC");
     }
 
 
@@ -149,10 +149,10 @@ public class OrderRepositoryTest {
         );
 
         // Quando o método findAllSorted for chamado, ele retorna o mockResponse
-        when(orderController.findAllSorted("order_id ASC")).thenReturn(mockResponse);
+        when(orderController.findAllSorted("id ASC")).thenReturn(mockResponse);
 
         // Chama o método listByFilters
-        List<OrderResponseDTO> response = orderController.findAllSorted("order_id ASC");
+        List<OrderResponseDTO> response = orderController.findAllSorted("id ASC");
 
         // Verifica se a resposta não é nula e tem o tamanho esperado
         assertNotNull(response);
@@ -163,6 +163,6 @@ public class OrderRepositoryTest {
         assertEquals("RECEBIDO", response.get(0).getStatus());
 
         // Verifica se o método findAllSorted foi chamado com o parâmetro correto
-        verify(orderController).findAllSorted("order_id ASC");
+        verify(orderController).findAllSorted("id ASC");
     }
 }

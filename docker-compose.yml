@@ -1,63 +1,27 @@
-version: '3.7'
+version: '3.8'
 services:
-       
-  quick-serve-api:
-    image: fiap-7soat-51/quick-serve-api:0.1
-    build:
-      context: ./
-    container_name: quick-serve-api
-    environment:
-      - 'SPRING_PROFILES_ACTIVE_ENVIRONMENT=${APP_ENVIRONMENT}'
-      - 'SPRING_DATASOURCE_PLATFORM=${DB_PLATFORM}'
-      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://quick-serve-db:5432/${DB_DATABASE}'
-      - 'SPRING_DATASOURCE_USERNAME=${DB_USER}'
-      - 'SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}'
-      - 'SPRING_DATASOURCE_DRIVER=${DB_DIALECT}'
-    ports:
-      - "${APP_PORT}:8087" #APP_ENVIRONMENT=production
-      #- "${APP_PORT}:8088" #APP_ENVIRONMENT=development
-    depends_on:
-      - quick-serve-db
-    networks:
-      - network-quick-serve
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
 
-  quick-serve-db:
+  quick-serve-api-pedido-db:
     image: postgres:14
-    container_name: quick-serve-db
+    container_name: quick-serve-api-pedido-db
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${QUICK_SERVE_API_PEDIDO_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${QUICK_SERVE_API_PEDIDO_POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
     volumes:
-      - ${DB_HOST_DATA}:/var/lib/postgresql/data
+      - ${QUICK_SERVE_API_PEDIDO_POSTGRES_VOLUME_DATA}:/var/lib/postgresql/data
+      - ./docker-compose/postgres:/docker-entrypoint-initdb.d
     ports:
-      - "${DB_PORT}:5432"
+      - "${QUICK_SERVE_API_PEDIDO_POSTGRES_PORT}:5432"
     networks:
-      - network-quick-serve
+      - network-quick-serve-api-pedido
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
-
-  quick-serve-pgadmin:
-    image: dpage/pgadmin4
-    container_name: quick-serve-db-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${DB_PGADMIN_USER}
-      PGADMIN_DEFAULT_PASSWORD: ${DB_PGADMIN_PASSWORD}
-    ports:
-      - "${DB_PGADMIN_PORT}:80"
-    depends_on:
-      - quick-serve-db
-    networks:
-      - network-quick-serve  
 
 networks:
 
-  network-quick-serve:
-    name: network-quick-serve
+  network-quick-serve-api-pedido:
+    name: network-quick-serve-api-pedido
     driver: bridge

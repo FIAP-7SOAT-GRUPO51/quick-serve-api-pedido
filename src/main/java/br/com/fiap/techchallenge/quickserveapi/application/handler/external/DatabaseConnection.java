@@ -47,7 +47,7 @@ public class DatabaseConnection implements dbconnection {
         }
 
         if (primaryKeyColumn == null) {
-            throw new RuntimeException("Nenhuma chave primária encontrada para a tabela: " + tabela);
+            primaryKeyColumn = "id";
         }
 
         return primaryKeyColumn;
@@ -82,10 +82,18 @@ public class DatabaseConnection implements dbconnection {
             throw new RuntimeException("Erro ao obter a coluna de ID da tabela: " + tabela, e);
         }
 
-        query.append(") RETURNING ")
-                .append(idColumn)
-                .append(";");
-        return executarQuery(query.toString(), parametros, campos);
+        query.append(")");
+
+        if (!isDbH2()) {
+            query.append(" RETURNING ")
+                    .append(idColumn)
+                    .append(";");
+        }
+        return executarQuery(tabela, query.toString(), parametros, campos);
+    }
+
+    private boolean isDbH2() {
+        return this.url.toLowerCase().contains("jdbc:h2");
     }
 
     public List<Map<String, Object>> Update(String tabela, String[] campos, ParametroBd[] parametros) {
@@ -111,7 +119,7 @@ public class DatabaseConnection implements dbconnection {
                 .append(idColumn)
                 .append("= ? ;");
 
-        return executarQuery(query.toString(), parametros,campos);
+        return executarQuery(tabela, query.toString(), parametros,campos);
     }
 
     public List<Map<String, Object>> buscarPorParametros(String tabela, String[] campos, ParametroBd[] parametros) {
@@ -139,10 +147,10 @@ public class DatabaseConnection implements dbconnection {
                 }
             }
         }
-        return executarQuery(query.toString(), parametros, campos);
+        return executarQuery(tabela, query.toString(), parametros, campos);
     }
 
-    public List<Map<String, Object>> executarQuery(String query, ParametroBd[] parametros, String[] campos) {
+    public List<Map<String, Object>> executarQuery(String tabela, String query, ParametroBd[] parametros, String[] campos) {
         List<Map<String, Object>> resultados = new ArrayList<>();
 
         try (Connection connection = connect();
@@ -170,20 +178,40 @@ public class DatabaseConnection implements dbconnection {
                 while (resultSet.next()) {
                     Map<String, Object> row = new HashMap<>();
                     for (int i = 1; i <= columnCount; i++) { // Loop pelas colunas com índice baseado em 1
-                        String columnName = metaData.getColumnName(i); // Obter o nome da coluna
+                        String columnName = metaData.getColumnName(i).toLowerCase(); // Obter o nome da coluna
                         row.put(columnName, resultSet.getObject(i)); // Inserir o valor no map
                     }
                     resultados.add(row);
                 }
             } else if (query.trim().toUpperCase().startsWith("INSERT")) {
-                ResultSet resultSet = preparedStatement.executeQuery();
 
-                if (resultSet.next()) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("id", resultSet.getObject(1));
-                    resultados.add(row);
-                } else {
-                    throw new RuntimeException("Nenhum ID retornado pela operação de inserção.");
+                Map<String, Object> row = new HashMap<>();
+
+                if (isDbH2()) {
+                    int affectedRows = preparedStatement.executeUpdate();
+                    if (affectedRows <= 0) {
+                        row.put("Mensagem", "Operação não foi executada, número de registros afetados foi: " + affectedRows);
+                        resultados.add(row);
+                    } else {
+                        PreparedStatement preparedStatementLast = connection.prepareStatement("SELECT MAX(id) FROM " + tabela);
+                        ResultSet resultSet = preparedStatementLast.executeQuery();
+                        if (resultSet.next()) {
+                            row.put("id", resultSet.getObject(1));
+                            resultados.add(row);
+                        } else {
+                            throw new RuntimeException("Nenhum ID retornado pela operação de inserção.");
+                        }
+                    }
+                }
+                else {
+                    ResultSet resultSet = preparedStatement.executeQuery();
+
+                    if (resultSet.next()) {
+                        row.put("id", resultSet.getObject(1));
+                        resultados.add(row);
+                    } else {
+                        throw new RuntimeException("Nenhum ID retornado pela operação de inserção.");
+                    }
                 }
             } else {
                 int affectedRows = preparedStatement.executeUpdate();
@@ -198,7 +226,13 @@ public class DatabaseConnection implements dbconnection {
                     resultados.add(row);
                 }
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("Erro", "Erro na operação: " + e.getMessage());
+            resultados.add(row);
+        }
+        catch (Exception e) {
             Map<String, Object> row = new HashMap<>();
             row.put("Erro", "Erro na operação: " + e.getMessage());
             resultados.add(row);
@@ -255,7 +289,7 @@ public class DatabaseConnection implements dbconnection {
             query.append(" ORDER BY ").append(defaultOrder);
         }
         // Executa a query com todos os parâmetros e campos
-        return executarQuery(query.toString(), parametros, campos);
+        return executarQuery(tabela, query.toString(), parametros, campos);
     }
 
 }

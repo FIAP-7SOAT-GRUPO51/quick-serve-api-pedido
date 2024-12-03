@@ -19,7 +19,7 @@ class OrderAdapterTest {
     @Test
     void deveMapearParaOrderEntityComSucesso() {
         Map<String, Object> row = new HashMap<>();
-        row.put("order_id", 1L);
+        row.put("id", 1L);
         row.put("customer_id", 123L);
         row.put("status", "RECEBIDO");
         row.put("payment_status", "PENDENTE");

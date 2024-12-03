@@ -20,13 +20,15 @@ public class OrderAdapter {
         if (row == null) {
             throw new RuntimeException("Ordem não encontrada");
         }
-
+        if (row.get("Erro") != null ){
+            throw new RuntimeException(String.valueOf(row.get("Erro")));
+        }
         // Conversão dos valores de 'status' e 'payment_status' para os enums respectivos
         OrderStatusEnum status = OrderStatusEnum.valueOf((String) row.get("status"));
         OrderPaymentStatusEnum paymentStatus = OrderPaymentStatusEnum.valueOf((String) row.get("payment_status"));
 
         // Conversão de 'order_id' e 'customer_id' de forma robusta
-        Long orderId = parseLong(row.get("order_id"));
+        Long orderId = parseLong(row.get("id"));
         Long customerId = parseLong(row.get("customer_id"));
 
         // Aqui, 'orderItems' será uma lista de OrderItem, por enquanto, colocamos null
@@ -74,7 +76,7 @@ public class OrderAdapter {
 
         // Aqui você já pode tratar como String diretamente
 
-        order.setId((Long) data.get("order_id"));
+        order.setId((Long) data.get("id"));
 
         // Conversão de customer_id de String para Long
         String customerIdString = (String) data.get("customer_id");

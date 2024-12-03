@@ -41,10 +41,10 @@ public class Gateway {
 
     public OrderEntity findOrderById(Long orderId) {
         // Definindo os campos que queremos buscar na tabela 'orders'
-        String[] campos = {"order_id", "status", "customer_id", "total_order_value", "payment_status"};
+        String[] campos = {"id", "status", "customer_id", "total_order_value", "payment_status"};
 
-        // Criando o parâmetro para a consulta (filtrando pelo 'order_id')
-        ParametroBd[] parametros = {new ParametroBd("order_id", orderId)};
+        // Criando o parâmetro para a consulta (filtrando pelo 'id')
+        ParametroBd[] parametros = {new ParametroBd("id", orderId)};
 
         // Buscando o pedido no banco de dados
         List<Map<String, Object>> result = database.buscarPorParametros("orders", campos, parametros);
@@ -87,7 +87,7 @@ public class Gateway {
 
     public List<OrderEntity> findAllOrders() {
         // Definindo os campos que queremos buscar na tabela 'orders'
-        String[] campos = {"order_id", "status", "customer_id", "total_order_value", "payment_status"};
+        String[] campos = {"id", "status", "customer_id", "total_order_value", "payment_status"};
 
         ParametroBd[] parametros = {};
         // Buscando todos os pedidos na base de dados
@@ -116,7 +116,7 @@ public class Gateway {
         String[] campos = {"status"};
         ParametroBd[] parametros = {
                 new ParametroBd("status", status.toString()),
-                new ParametroBd("order_id", orderId)
+                new ParametroBd("id", orderId)
         };
 
         // Atualiza o status no banco de dados
@@ -130,7 +130,7 @@ public class Gateway {
         String[] campos = {"payment_status"};
         ParametroBd[] parametros = {
                 new ParametroBd("payment_status", status.toString()),
-                new ParametroBd("order_id", orderId)
+                new ParametroBd("id", orderId)
         };
 
         // Atualiza o status no banco de dados
@@ -141,12 +141,12 @@ public class Gateway {
 
 
     public PaymentStatusDTO findPaymentStatus(Long orderId) {
-        String[] campos = {"order_id", "payment_status"};
-        ParametroBd[] parametros = {new ParametroBd("order_id", orderId)};
+        String[] campos = {"id", "payment_status"};
+        ParametroBd[] parametros = {new ParametroBd("id", orderId)};
         List<Map<String, Object>> result = database.buscarPorParametros("orders", campos, parametros);
 
         if (result != null && !result.isEmpty()) {
-            Long orderIdFromDb = (Long) result.get(0).get("order_id");
+            Long orderIdFromDb = (Long) result.get(0).get("id");
             String paymentStatus = result.get(0).get("payment_status").toString();
             return new PaymentStatusDTO(orderIdFromDb, paymentStatus);
         }
@@ -156,7 +156,7 @@ public class Gateway {
 
     public List<OrderEntity> findOrdersWithSorting(Map<String, Integer> caseFiltros, String sortOrder) {
         // Definindo os campos que queremos buscar na tabela 'orders'
-        String[] campos = {"order_id", "status", "customer_id", "total_order_value", "payment_status"};
+        String[] campos = {"id", "status", "customer_id", "total_order_value", "payment_status"};
 
         // Nenhum parâmetro adicional para filtros neste exemplo
         ParametroBd[] parametros = {new ParametroBd("status", "FINALIZADO")};
@@ -171,7 +171,7 @@ public class Gateway {
         caseFiltros.put("RECEBIDO", 3);
 
         // Realizando a consulta com filtros e ordenação
-        List<Map<String, Object>> resultados = database.buscarPorFiltros("orders", campos, parametros, filtros, caseFiltros,  "order_id ASC");
+        List<Map<String, Object>> resultados = database.buscarPorFiltros("orders", campos, parametros, filtros, caseFiltros,  "id ASC");
 
         List<OrderEntity> orders = OrderAdapter.mapToOrderEntityList(resultados);
 

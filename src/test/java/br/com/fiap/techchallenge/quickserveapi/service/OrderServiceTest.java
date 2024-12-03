@@ -5,7 +5,6 @@ import br.com.fiap.techchallenge.quickserveapi.application.handler.exception.Not
 import br.com.fiap.techchallenge.quickserveapi.application.handler.gateway.Gateway;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.http.ProductClient;
 import br.com.fiap.techchallenge.quickserveapi.application.handler.usecases.OrderCase;
-import br.com.fiap.techchallenge.quickserveapi.utils.BuildOrderHelper;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,20 +13,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.TestPropertySource;
 
-import java.util.List;
-
-import static br.com.fiap.techchallenge.quickserveapi.application.handler.entities.OrderPaymentStatusEnum.PENDENTE;
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.assertEquals;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Sql("/data.sql")
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "spring.datasource.url=jdbc:h2:mem:testdb",
+                "spring.datasource.username=root",
+                "spring.datasource.password=toor",
+                "spring.flyway.locations=classpath:db/migration/h2"
+        }
+)
 public class OrderServiceTest {
 
     @Mock

@@ -1,0 +1,1 @@
+create database "quick-serve-api-pedido";

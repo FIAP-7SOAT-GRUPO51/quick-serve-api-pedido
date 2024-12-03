@@ -83,7 +83,7 @@ public class Order {
                     "EM_PREPARACAO" +
                     "RECEBIDO"
     )
-    public List<OrderResponseDTO> listByFilters(@RequestParam(defaultValue = "order_id ASC") String sortOrder) {
+    public List<OrderResponseDTO> listByFilters(@RequestParam(defaultValue = "id ASC") String sortOrder) {
         return orderController.findAllSorted(sortOrder);
     }
 
