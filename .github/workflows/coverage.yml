@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/coverage-github-actions
   pull_request:
 
 jobs:
@@ -33,7 +34,8 @@ jobs:
 
     # 4. Executar testes com cobertura
     - name: Build and test
-      run: mvn clean verify
+      run: mvn clean test -P system-test
+      #run: mvn clean verify
 
     # 5. Gerar relatório JaCoCo
     - name: Upload coverage to Codecov

@@ -1,21 +1,22 @@
 package br.com.fiap.techchallenge.quickserveapi.application.handler.entities;
 
-import java.util.List;
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class OrderEntity {
+import java.util.List;
+
+public class OrderPostEntity {
     private Long id;
     private Long customerID;
     private OrderStatusEnum status;
     private OrderPaymentStatusEnum paymentStatus;
-    private List<OrderItem> orderItems;
+    private List<OrderDTO> orderItems;
     private Double totalOrderValue;
 
     // Construtor sem argumentos
-    public OrderEntity() {
+    public OrderPostEntity() {
     }
 
-    public OrderEntity(Long id, Long customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<OrderItem> orderItems, Double totalOrderValue) {
+    public OrderPostEntity(Long id, Long customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<OrderDTO> orderItems, Double totalOrderValue) {
         this.id = id;
         this.customerID = customerID;
         this.status = status;
@@ -23,6 +24,23 @@ public class OrderEntity {
         this.orderItems = orderItems;
         this.totalOrderValue = totalOrderValue;
     }
+
+    // Outros construtores...
+    public OrderPostEntity(Long id, Long customerID, OrderPaymentStatusEnum paymentStatus, List<OrderDTO> orderItems, Double totalOrderValue) {
+        this.id = id;
+        this.customerID = customerID;
+        this.paymentStatus = paymentStatus;
+        this.orderItems = orderItems;
+        this.totalOrderValue = totalOrderValue;
+    }
+
+    public OrderPostEntity(Long customerID, OrderStatusEnum status, OrderPaymentStatusEnum paymentStatus, List<OrderDTO> orderItems) {
+        this.customerID = customerID;
+        this.status = status;
+        this.paymentStatus = paymentStatus;
+        this.orderItems = orderItems;
+    }
+
     public Long getId() {
         return this.id;
     }
@@ -55,29 +73,31 @@ public class OrderEntity {
         this.paymentStatus = paymentStatus;
     }
 
-    public List<OrderItem> getOrderItems() {
+    public List<OrderDTO> getOrderDTOs() {
         return this.orderItems;
     }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
+    public void setOrderDTOs(List<OrderDTO> orderItems) {
         this.orderItems = orderItems;
     }
 
     public Double getTotalOrderValue() {
-        if (this.totalOrderValue == null) {
-            return calculateTotalOrderValue();
-        }
         return this.totalOrderValue;
     }
 
     public void setTotalOrderValue(Double totalOrderValue) {
         this.totalOrderValue = totalOrderValue;
     }
-
-    private Double calculateTotalOrderValue() {
-        return orderItems.stream()
-                .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                .sum();
+    @Override
+    public String toString() {
+        return "OrderPostEntity{" +
+                "id=" + id +
+                ", customerID=" + customerID +
+                ", status=" + status +
+                ", paymentStatus=" + paymentStatus +
+                ", orderItems=" + orderItems +
+                ", totalOrderValue=" + totalOrderValue +
+                '}';
     }
 }
 
