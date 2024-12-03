@@ -256,7 +256,7 @@
         </plugins>
 	</build>
 
-	<profiles>
+		<profiles>
 		<profile>
 			<id>integration-test</id>
 			<build>
@@ -271,6 +271,7 @@
 							</includes>
 							<excludes combine.self="override">
 								<exclude>**/*Test.java</exclude>
+								<exclude>**/CucumberTest.java</exclude>
 							</excludes>
 							<properties>
 								<junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
@@ -296,10 +297,12 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<version>3.1.2</version>
 						<configuration>
-							<includes combine.self="override">
-								<include>**/CucumberTest**</include>
+							<includes>
+								<include>**/*Test.java</include> 
 							</includes>
-							<excludes combine.self="override">
+							<excludes>
+								<exclude>**/CucumberTest.java</exclude> 
+								<exclude>**/*IT.java</exclude>
 							</excludes>
 						</configuration>
 					</plugin>
