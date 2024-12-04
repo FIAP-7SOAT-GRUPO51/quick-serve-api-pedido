@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 
-@FeignClient(name = "quick-serve", url = "http://localhost:8081/quick_service")
+@FeignClient(name = "quick-serve", url = "http://52.91.227.11:30081/quick_service")
 public interface ProductClient {
 
     // Método para buscar um produto por ID
