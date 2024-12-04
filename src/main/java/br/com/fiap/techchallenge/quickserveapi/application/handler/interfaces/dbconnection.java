@@ -8,7 +8,5 @@ public interface dbconnection {
 
     List<Map<String, Object>> Inserir(String tabela, String[] campos, ParametroBd[] parametros);
 
-    List<Map<String, Object>> deletar(String tabela, String[] campos, ParametroBd[] parametros);
-
     List<Map<String, Object>> Update(String tabela, String[] campos, ParametroBd[] parametros);
 }
