@@ -46,6 +46,7 @@ jobs:
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME
 
   check-cluster:
+    needs: build-docker-image
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
