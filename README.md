@@ -34,5 +34,4 @@ mvn spring-boot:run
 ```
 
 ## Evidência da cobertura de testes
-
-
+![image](https://github.com/user-attachments/assets/6c17bde9-728b-471f-a23c-a18cb02e45a9)
